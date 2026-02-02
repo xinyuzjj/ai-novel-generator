@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小说生成器 - 纯净版</title>
+    <link rel="stylesheet" href="css/main.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Title Bar -->
+        <div class="titlebar">
+            <div class="titlebar-title">
+                <i class="fas fa-book-open"></i>
+                <span>峻峻尼AI小说生成器</span>
+                <span class="version-tag">v1.0.1</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn" id="btn-theme-toggle" title="切换主题"><i class="fas fa-moon"></i></button>
+                <button class="titlebar-btn" id="btn-minimize"><i class="fas fa-minus"></i></button>
+                <button class="titlebar-btn" id="btn-maximize"><i class="fas fa-square"></i></button>
+                <button class="titlebar-btn close" id="btn-close"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="menu-item active" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </div>
+                <div class="menu-item" data-page="prompt">
+                    <i class="fas fa-pen-fancy"></i>
+                    <span>创建题材</span>
+                </div>
+                <div class="menu-item" data-page="settings">
+                    <i class="fas fa-cogs"></i>
+                    <span>小说设定</span>
+                </div>
+                <div class="menu-item" data-page="outline">
+                    <i class="fas fa-list-alt"></i>
+                    <span>章节大纲</span>
+                </div>
+                <div class="menu-item" data-page="generate">
+                    <i class="fas fa-magic"></i>
+                    <span>小说生成</span>
+                </div>
+                <div class="menu-item" data-page="architect">
+                    <i class="fas fa-crown"></i>
+                    <span>大神架构</span>
+                    <span class="badge-new">NEW</span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" data-page="api-config">
+                    <i class="fas fa-key"></i>
+                    <span>模型API</span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" id="sidebar-theme-toggle">
+                    <i class="fas fa-adjust"></i>
+                    <span>切换主题</span>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Home Page -->
+                <div class="page active" id="page-home">
+                    <div class="card home-card">
+                        <h1>欢迎使用 AI小说生成器</h1>
+                        <p class="subtitle">让AI释放你的创作无限可能</p>
+
+                        <div class="feature-grid">
+                            <div class="feature-item" onclick="app.navigateTo('prompt')">
+                                <i class="fas fa-pen-fancy"></i>
+                                <h3>创建题材</h3>
+                                <p>定义你的小说风格、角色和世界观</p>
+                            </div>
+                            <div class="feature-item" onclick="app.navigateTo('outline')">
+                                <i class="fas fa-list-alt"></i>
+                                <h3>生成大纲</h3>
+                                <p>自动规划章节剧情和故事走向</p>
+                            </div>
+                            <div class="feature-item" onclick="app.navigateTo('generate')">
+                                <i class="fas fa-magic"></i>
+                                <h3>开始写作</h3>
+                                <p>AI辅助生成正文，支持上下文记忆</p>
+                            </div>
+                            <div class="feature-item" onclick="app.showImportDialog()">
+                                <i class="fas fa-file-import"></i>
+                                <h3>导入TXT</h3>
+                                <p>导入现有小说文本，AI自动分析填充</p>
+                            </div>
+                        </div>
+
+                        <!-- 导入TXT对话框 -->
+                        <div id="import-dialog" class="modal" style="display: none;">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3><i class="fas fa-file-import"></i> 导入TXT文件</h3>
+                                    <button class="btn-close" onclick="document.getElementById('import-dialog').style.display='none'">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label>选择TXT文件</label>
+                                        <input type="file" id="txt-file-input" accept=".txt" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>导入设置</label>
+                                        <div class="check-list">
+                                            <label><input type="checkbox" id="auto-chapter-split" checked> 自动分章</label>
+                                            <label><input type="checkbox" id="auto-fill-info" checked> 自动填充信息</label>
+                                            <label><input type="checkbox" id="preview-only" unchecked> 仅预览</label>
+                                        </div>
+                                    </div>
+                                    <div id="import-progress" class="progress-container" style="display: none;">
+                                        <div class="progress-header">
+                                            <h4>导入进度</h4>
+                                            <span id="progress-status">准备中...</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div id="progress-details" class="progress-details"></div>
+                                    </div>
+                                    <div id="import-result" class="result-container" style="display: none;">
+                                        <div class="result-header">
+                                            <h4>导入结果</h4>
+                                        </div>
+                                        <div id="result-content" class="result-content"></div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-secondary" onclick="document.getElementById('import-dialog').style.display='none'">
+                                        取消
+                                    </button>
+                                    <button class="btn btn-primary" id="btn-start-import">
+                                        开始导入
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="social-section">
+                            <h3><i class="fas fa-users"></i> 联系峻峻尼</h3>
+                            <div class="social-links">
+                                <a href="https://www.douyin.com/user/86006226058" class="social-item social-link"
+                                    title="访问我的抖音" target="_blank" rel="noopener noreferrer">
+                                    <i class="fab fa-tiktok"></i>
+                                    <span>抖音</span>
+                                </a>
+                                <a href="https://www.xiaohongshu.com/user/profile/63524116418"
+                                    class="social-item social-link" title="访问我的小红书" target="_blank"
+                                    rel="noopener noreferrer">
+                                    <i class="fas fa-book"></i>
+                                    <span>小红书</span>
+                                </a>
+                                <a href="https://space.bilibili.com/486593729" class="social-item social-link"
+                                    title="访问我的B站" target="_blank" rel="noopener noreferrer">
+                                    <i class="fab fa-bilibili"></i>
+                                    <span>哔哩哔哩</span>
+                                </a>
+                                <div class="social-item social-qr" title="企业微信">
+                                    <i class="fab fa-weixin"></i>
+                                    <div class="qr-container">
+                                        <span>企业微信</span>
+                                        <div class="qr-code">
+                                            <img src="assets/wechat-qr.png" alt="企业微信二维码"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                            <div class="qr-placeholder" style="display:none;">
+                                                <i class="fas fa-qrcode"></i>
+                                                <small>二维码图片</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="social-item" title="QQ邮箱">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>1105002234@qq.com</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            本版本为本地纯净版，无需登录，所有数据存储在本地浏览器缓存中。请注意定期备份重要数据，完全免费。
+                            想要支持作者可以添加本人企业微信❤
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prompt Page -->
+                <div class="page" id="page-prompt">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-pen-fancy"></i> 创建题材</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" id="btn-new-prompt"><i class="fas fa-plus"></i>
+                                    新建题材</button>
+                                <button class="btn btn-secondary" id="btn-load-prompt"><i
+                                        class="fas fa-folder-open"></i> 加载题材</button>
+                                <button class="btn btn-primary" id="btn-save-prompt"><i class="fas fa-save"></i>
+                                    保存题材</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label><i class="fas fa-layer-group"></i> 小说分类</label>
+                                <select id="prompt-category" class="form-control">
+                                    <option value="xuanhuan">玄幻修真</option>
+                                    <option value="dushi">都市异能</option>
+                                    <option value="kehuan">科幻未来</option>
+                                    <option value="lishi">历史架空</option>
+                                    <option value="yanqing">言情小说</option>
+                                    <option value="wuxia">武侠仙侠</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+
+                            <div class="tabs">
+                                <button class="tab-btn active" data-tab="tab-prompt-basic">基础配置</button>
+                                <button class="tab-btn" data-tab="tab-prompt-style">文风增强</button>
+                                <button class="tab-btn" data-tab="tab-prompt-rules">创作规则</button>
+                            </div>
+
+                            <!-- Basic Configuration -->
+                            <div class="tab-content active" id="tab-prompt-basic">
+                                <div class="form-row">
+                                    <div class="form-group col">
+                                        <label>项目名称</label>
+                                        <input type="text" id="prompt-project-name" class="form-control"
+                                            placeholder="我的小说">
+                                    </div>
+                                    <div class="form-group col">
+                                        <label>预计总章节</label>
+                                        <input type="number" id="prompt-total-chapters" class="form-control"
+                                            value="100">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col">
+                                        <label>单章最小字数</label>
+                                        <input type="number" id="prompt-min-words" class="form-control" value="2000">
+                                    </div>
+                                    <div class="form-group col">
+                                        <label>单章最大字数</label>
+                                        <input type="number" id="prompt-max-words" class="form-control" value="4000">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Style Enhancement -->
+                            <div class="tab-content" id="tab-prompt-style">
+                                <div class="form-group">
+                                    <label>作者角色设定 (Prompt)</label>
+                                    <textarea id="prompt-author-role" class="form-control textarea-large"
+                                        placeholder="你是一个专业的网文作家，擅长..."></textarea>
+                                    <p class="help-text">定义AI的身份、文风特点和写作专长。</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>风格标签 <small class="text-muted">(可多选)</small></label>
+                                    <div class="style-tags" id="style-tags">
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="爽文">
+                                            <span class="tag-label">
+                                                <i class="fas fa-fire"></i> 爽文
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="扮猪吃老虎">
+                                            <span class="tag-label">
+                                                <i class="fas fa-mask"></i> 扮猪吃老虎
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="快节奏">
+                                            <span class="tag-label">
+                                                <i class="fas fa-bolt"></i> 快节奏
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="慢热型">
+                                            <span class="tag-label">
+                                                <i class="fas fa-hourglass-half"></i> 慢热型
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="轻松搞笑">
+                                            <span class="tag-label">
+                                                <i class="fas fa-laugh"></i> 轻松搞笑
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="热血战斗">
+                                            <span class="tag-label">
+                                                <i class="fas fa-fist-raised"></i> 热血战斗
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="智斗权谋">
+                                            <span class="tag-label">
+                                                <i class="fas fa-chess"></i> 智斗权谋
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="感情细腻">
+                                            <span class="tag-label">
+                                                <i class="fas fa-heart"></i> 感情细腻
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="冷峻写实">
+                                            <span class="tag-label">
+                                                <i class="fas fa-snowflake"></i> 冷峻写实
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="冰山理论">
+                                            <span class="tag-label">
+                                                <i class="fas fa-ice-berg"></i> 冰山理论
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="分镜化叙事">
+                                            <span class="tag-label">
+                                                <i class="fas fa-film"></i> 分镜化叙事
+                                            </span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="style-tag" value="深度心理学">
+                                            <span class="tag-label">
+                                                <i class="fas fa-brain"></i> 深度心理学
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Creation Rules -->
+                            <div class="tab-content" id="tab-prompt-rules">
+                                <div class="form-group">
+                                    <label>创作规则 (Rules)</label>
+                                    <textarea id="prompt-rules" class="form-control textarea-large"
+                                        placeholder="1. 黄金三章开局...&#10;2. 主角性格要鲜明..."></textarea>
+                                    <p class="help-text">设置具体的写作规则和禁忌。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Great Architect Page (大神架构) -->
+                <div class="page" id="page-architect">
+                    <div class="card full-height">
+                        <div class="card-header architecture-header">
+                            <h2><i class="fas fa-crown"></i> 大神架构 <small>引导式创作工作流</small></h2>
+                            <div class="wizard-steps">
+                                <div class="step active" data-step="1">1. 核心扩展</div>
+                                <div class="step" data-step="2">2. 深度构建</div>
+                                <div class="step" data-step="3">3. 切片撰写</div>
+                                <div class="step" data-step="4">4. 人性优化</div>
+                            </div>
+                        </div>
+                        <div class="card-body architecture-body">
+                            <!-- Stage 1: Creative Expansion -->
+                            <div class="architect-stage active" id="architect-stage-1">
+                                <div class="stage-intro">
+                                    <h3>第一阶段：核心创意扩展</h3>
+                                    <p>基于你的灵感，生成多个不同方向的故事架构，帮助你找到最佳创作方向。</p>
+                                </div>
+                                <div class="form-group">
+                                    <label>你的初步设定 / 灵感碎片</label>
+                                    <textarea id="architect-input-1" class="form-control" rows="5"
+                                        placeholder="例如：一个能听到物品说话的离婚律师...或：一个拥有预知死亡能力的医生..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>衍生风格偏好</label>
+                                    <div class="style-tags" id="architect-style-tags">
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="爽文">
+                                            <span class="tag-label"><i class="fas fa-fire"></i> 爽文</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="虐文">
+                                            <span class="tag-label"><i class="fas fa-sad-tear"></i> 虐文</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="反转">
+                                            <span class="tag-label"><i class="fas fa-retweet"></i> 高智商反转</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="脑洞">
+                                            <span class="tag-label"><i class="fas fa-brain"></i> 大脑洞</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="情感">
+                                            <span class="tag-label"><i class="fas fa-heart"></i> 情感细腻</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="战斗">
+                                            <span class="tag-label"><i class="fas fa-fist-raised"></i> 热血战斗</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="智斗">
+                                            <span class="tag-label"><i class="fas fa-chess"></i> 智斗权谋</span>
+                                        </label>
+                                        <label class="tag-card">
+                                            <input type="checkbox" name="architect-style" value="轻松">
+                                            <span class="tag-label"><i class="fas fa-laugh"></i> 轻松搞笑</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-6">
+                                        <label>衍生数量</label>
+                                        <select id="architect-idea-count" class="form-control">
+                                            <option value="3">3 个方向</option>
+                                            <option value="5" selected>5 个方向</option>
+                                            <option value="8">8 个方向</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label>细节程度</label>
+                                        <select id="architect-detail-level" class="form-control">
+                                            <option value="basic">基础 (标题+简介)</option>
+                                            <option value="detail" selected>详细 (标题+简介+标签)</option>
+                                            <option value="comprehensive">全面 (标题+简介+标签+亮点)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-primary btn-block" id="btn-architect-expand">
+                                        <i class="fas fa-wand-sparkles"></i> 开始衍生故事脉络
+                                    </button>
+                                    <button class="btn btn-secondary btn-block" id="btn-architect-preset">
+                                        <i class="fas fa-list"></i> 使用预设模板
+                                    </button>
+                                </div>
+                                <div id="architect-results-1" class="architect-results-stack mt-20">
+                                    <!-- AI results will appear here -->
+                                </div>
+                                <div class="alert alert-info" style="margin-top: 20px;">
+                                    <i class="fas fa-lightbulb"></i> 提示：AI会根据你的选择生成不同风格的故事方向，选择最有感觉的一个进行深入创作。
+                                </div>
+                            </div>
+
+                            <!-- Stage 2: Character & Pacing -->
+                            <div class="architect-stage" id="architect-stage-2">
+                                <div class="stage-intro">
+                                    <h3>第二阶段：角色构建与情绪节奏规划</h3>
+                                    <p>基于选定的方向，进行反派推演、主角建档及章节提纲规划。</p>
+                                </div>
+                                <div class="form-group">
+                                    <label>已选定故事标题</label>
+                                    <input type="text" id="architect-selected-title" class="form-control" readonly>
+                                </div>
+                                <div class="tabs">
+                                    <button class="tab-btn active" data-tab="tab-build-characters">角色设定</button>
+                                    <button class="tab-btn" data-tab="tab-build-outline">章节大纲</button>
+                                    <button class="tab-btn" data-tab="tab-build-world">世界观设定</button>
+                                </div>
+                                <div class="tab-content active" id="tab-build-characters">
+                                    <div class="form-row">
+                                        <div class="form-group col-50">
+                                            <label>
+                                                <input type="checkbox" id="build-main-character" checked>
+                                                主角设定
+                                            </label>
+                                            <small class="text-muted">详细设定主角的性格、背景、成长路线</small>
+                                        </div>
+                                        <div class="form-group col-50">
+                                            <label>
+                                                <input type="checkbox" id="build-villain" checked>
+                                                反派推演
+                                            </label>
+                                            <small class="text-muted">分析反派的动机、能力、弱点</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-50">
+                                            <label>
+                                                <input type="checkbox" id="build-secondary" checked>
+                                                配角设定
+                                            </label>
+                                            <small class="text-muted">设定主要配角和关系网络</small>
+                                        </div>
+                                        <div class="form-group col-50">
+                                            <label>
+                                                <input type="checkbox" id="build-relationships" checked>
+                                                关系网络
+                                            </label>
+                                            <small class="text-muted">分析角色之间的复杂关系</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content" id="tab-build-outline">
+                                    <div class="form-row">
+                                        <div class="form-group col-50">
+                                            <label>大纲类型</label>
+                                            <select id="outline-type" class="form-control">
+                                                <option value="emotion">情绪节奏大纲</option>
+                                                <option value="plot">剧情发展大纲</option>
+                                                <option value="both" selected>综合大纲</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-50">
+                                            <label>大纲章节数</label>
+                                            <select id="outline-chapters" class="form-control">
+                                                <option value="10">10 章</option>
+                                                <option value="20">20 章</option>
+                                                <option value="30" selected>30 章</option>
+                                                <option value="50">50 章</option>
+                                                <option value="100">100 章</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>关键节点要求</label>
+                                        <div class="check-list">
+                                            <label><input type="checkbox" id="outline-key-points" checked> 标注关键爽点/虐点</label>
+                                            <label><input type="checkbox" id="outline-cliffhangers" checked> 设计章节结尾钩子</label>
+                                            <label><input type="checkbox" id="outline-character-growth" checked> 规划角色成长曲线</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content" id="tab-build-world">
+                                    <div class="form-group">
+                                        <label>世界观深度</label>
+                                        <select id="world-depth" class="form-control">
+                                            <option value="light">轻度设定</option>
+                                            <option value="medium" selected>中度设定</option>
+                                            <option value="deep">深度设定</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>需要设定的元素</label>
+                                        <div class="check-list">
+                                            <label><input type="checkbox" id="world-system" checked> 力量系统</label>
+                                            <label><input type="checkbox" id="world-history" checked> 历史背景</label>
+                                            <label><input type="checkbox" id="world-powers" checked> 势力分布</label>
+                                            <label><input type="checkbox" id="world-rules" checked> 世界规则</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions mt-10">
+                                    <button class="btn btn-primary" id="btn-architect-build">
+                                        <i class="fas fa-vial"></i> 启动深度构建
+                                    </button>
+                                    <button class="btn btn-secondary" id="btn-architect-save-outline">
+                                        <i class="fas fa-save"></i> 保存设定
+                                    </button>
+                                </div>
+                                <div id="architect-results-2" class="architect-results-scroll mt-20">
+                                    <!-- AI results will appear here -->
+                                </div>
+                            </div>
+
+                            <!-- Stage 3: Scene Slicing -->
+                            <div class="architect-stage" id="architect-stage-3">
+                                <div class="stage-intro">
+                                    <h3>第三阶段：场景切片化撰写</h3>
+                                    <p>遵循“300字法则”与“冰山理论”，像拍电影一样写小说。</p>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-4">
+                                        <label>选择章节</label>
+                                        <select id="architect-chapter-select" class="form-control"></select>
+                                    </div>
+                                    <div class="form-group col-8">
+                                        <label>目标情绪强度</label>
+                                        <div class="range-with-value">
+                                            <input type="range" id="architect-intensity" min="1" max="10" value="7">
+                                            <span id="intentsity-value">7</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-6">
+                                        <label>写作模式</label>
+                                        <select id="architect-write-mode" class="form-control">
+                                            <option value="normal">正常撰写</option>
+                                            <option value="outline">基于大纲撰写</option>
+                                            <option value="scene">分镜模式</option>
+                                            <option value="dialogue">对话驱动</option>
+                                            <option value="description">描写强化</option>
+                                            <option value="thinking">内心独白</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label>AI辅助强度</label>
+                                        <select id="architect-ai-level" class="form-control">
+                                            <option value="light">轻度辅助</option>
+                                            <option value="medium" selected>中度辅助</option>
+                                            <option value="strong">重度辅助</option>
+                                            <option value="full">全权委托</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="scene-editor-container">
+                                    <textarea id="architect-editor" class="form-control"
+                                        placeholder="开始创作...（每300字会自动提醒预埋反转）"></textarea>
+                                    <div class="editor-stats">
+                                        <span>当前字数: <b id="architect-word-count">0</b></span>
+                                        <span id="pacing-helper" class="text-info">建议在 300 字附近增加一个反转点</span>
+                                        <span id="scene-counter">场景 0 / 0</span>
+                                    </div>
+                                    <div class="scene-controls">
+                                        <button class="btn btn-sm btn-secondary" id="btn-scene-next">
+                                            <i class="fas fa-forward"></i> 下一场景
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" id="btn-scene-prev">
+                                            <i class="fas fa-backward"></i> 上一场景
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-actions mt-10">
+                                    <button class="btn btn-secondary" id="btn-architect-save-draft">
+                                        <i class="fas fa-save"></i> 保存草稿
+                                    </button>
+                                    <button class="btn btn-primary" id="btn-architect-write">
+                                        <i class="fas fa-feather-pointed"></i> AI 辅助撰写/续写
+                                    </button>
+                                    <button class="btn btn-primary" id="btn-architect-outline-write">
+                                        <i class="fas fa-sync"></i> 基于大纲撰写
+                                    </button>
+                                    <button class="btn btn-secondary" id="btn-architect-import">
+                                        <i class="fas fa-folder-open"></i> 导入章节
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Stage 4: Optimization -->
+                            <div class="architect-stage" id="architect-stage-4">
+                                <div class="stage-intro">
+                                    <h3>第四阶段：内容检查与人性化润色</h3>
+                                    <p>剔除AI感，增加生活闲笔，调整叙事呼吸感。</p>
+                                </div>
+                                <div class="tabs">
+                                    <button class="tab-btn active" data-tab="tab-optimize-style">文风优化</button>
+                                    <button class="tab-btn" data-tab="tab-optimize-structure">结构调整</button>
+                                    <button class="tab-btn" data-tab="tab-optimize-content">内容检查</button>
+                                </div>
+                                <div class="tab-content active" id="tab-optimize-style">
+                                    <div class="form-group">
+                                        <label>优化目标</label>
+                                        <div class="check-list">
+                                            <label><input type="checkbox" id="optimize-remove-ai" checked> 剔除AI感</label>
+                                            <label><input type="checkbox" id="optimize-add-details" checked> 增加细节描写</label>
+                                            <label><input type="checkbox" id="optimize-vary-sentences" checked> 调整句式节奏</label>
+                                            <label><input type="checkbox" id="optimize-environment" checked> 增加环境闲笔</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>文风偏好</label>
+                                        <select id="optimize-style" class="form-control">
+                                            <option value="realistic">写实风格</option>
+                                            <option value="literary">文学气质</option>
+                                            <option value="cinematic">电影感</option>
+                                            <option value="modern">现代简洁</option>
+                                            <option value="classic">经典厚重</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="tab-content" id="tab-optimize-structure">
+                                    <div class="form-group">
+                                        <label>结构优化</label>
+                                        <div class="check-list">
+                                            <label><input type="checkbox" id="structure-reorder" checked> 重新组织段落</label>
+                                            <label><input type="checkbox" id="structure-add-hooks" checked> 增加钩子</label>
+                                            <label><input type="checkbox" id="structure-shorten" checked> 删减冗余</label>
+                                            <label><input type="checkbox" id="structure-add-transitions" checked> 增加过渡句</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>节奏调整</label>
+                                        <div class="range-with-value">
+                                            <input type="range" id="structure-pacing" min="1" max="10" value="5">
+                                            <span>当前值: 5 (1=慢节奏, 10=快节奏)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content" id="tab-optimize-content">
+                                    <div class="form-group">
+                                        <label>内容检查</label>
+                                        <div class="check-list">
+                                            <label><input type="checkbox" id="content-check-dialog" checked> 对话真实性</label>
+                                            <label><input type="checkbox" id="content-check-character" checked> 人设一致性</label>
+                                            <label><input type="checkbox" id="content-check-plausibility" checked> 情节合理性</label>
+                                            <label><input type="checkbox" id="content-check-details" checked> 细节准确性</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="split-view architect-optimization-view">
+                                    <div class="view-panel">
+                                        <label>原文内容</label>
+                                        <div id="architect-original-text" class="content-preview"></div>
+                                    </div>
+                                    <div class="view-panel">
+                                        <label>优化后内容</label>
+                                        <div id="architect-optimized-text" class="content-preview"></div>
+                                    </div>
+                                </div>
+                                <div class="form-actions mt-10">
+                                    <button class="btn btn-primary" id="btn-architect-optimize">
+                                        <i class="fas fa-sparkles"></i> 启动人性化润色
+                                    </button>
+                                    <button class="btn btn-secondary" id="btn-architect-preview">
+                                        <i class="fas fa-eye"></i> 预览对比
+                                    </button>
+                                </div>
+                                <div class="form-actions mt-10">
+                                    <button class="btn btn-success" id="btn-architect-finalize">
+                                        <i class="fas fa-check-circle"></i> 确认并导入正式库
+                                    </button>
+                                    <button class="btn btn-primary" id="btn-architect-export">
+                                        <i class="fas fa-download"></i> 导出为TXT
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer architecture-footer">
+                            <button class="btn btn-link" id="btn-architect-prev" disabled>上一步</button>
+                            <button class="btn btn-link" id="btn-architect-next" disabled>下一步</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div class="page" id="page-settings">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-cogs"></i> 小说设定</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="settingsManager.loadSettings()">刷新</button>
+                                <button class="btn btn-primary" onclick="settingsManager.saveSettings()">保存设定</button>
+                            </div>
+                        </div>
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="tab-character">金手指/关键信息</button>
+                            <button class="tab-btn" data-tab="tab-character-info">角色信息</button>
+                            <button class="tab-btn" data-tab="tab-world">世界观</button>
+                            <button class="tab-btn" data-tab="tab-forbidden">禁区设定</button>
+                        </div>
+                        <div class="tab-content active" id="tab-character">
+                            <div class="toolbar mb-10">
+                                <button class="btn btn-sm btn-secondary" id="btn-add-state">
+                                    <i class="fas fa-plus"></i> 添加信息
+                                </button>
+                                <button class="btn btn-sm btn-info" id="btn-import-character-preset">
+                                    <i class="fas fa-file-import"></i> 导入推荐设定
+                                </button>
+                            </div>
+                            <div id="character-state-list" class="dynamic-list">
+                                <!-- Dynamic items here -->
+                            </div>
+                            <p class="help-text mt-10">记录主角的金手指、系统、修为等关键信息。这些信息会随剧情推进而更新，AI生成时会参考并自动更新。</p>
+                        </div>
+                        <div class="tab-content" id="tab-character-info">
+                            <div class="toolbar mb-10">
+                                <button class="btn btn-sm btn-secondary" id="btn-add-character">
+                                    <i class="fas fa-plus"></i> 添加角色
+                                </button>
+                                <button class="btn btn-sm btn-info" id="btn-import-character-info-preset">
+                                    <i class="fas fa-file-import"></i> 导入推荐设定
+                                </button>
+                            </div>
+                            <div id="character-info-list" class="character-cards">
+                                <!-- Dynamic character cards here -->
+                            </div>
+                            <p class="help-text mt-10">记录小说中的关键角色信息（主角、女主、配角等）。角色信息会随剧情推进而更新，AI生成时会参考。</p>
+                        </div>
+                        <div class="tab-content" id="tab-world">
+                            <div class="toolbar mb-10">
+                                <button class="btn btn-sm btn-secondary" id="btn-add-world">
+                                    <i class="fas fa-plus"></i> 添加设定
+                                </button>
+                                <button class="btn btn-sm btn-info" id="btn-import-world-preset">
+                                    <i class="fas fa-file-import"></i> 导入推荐设定
+                                </button>
+                            </div>
+                            <div id="world-settings-list" class="dynamic-list">
+                                <!-- Dynamic items here -->
+                            </div>
+                            <p class="help-text mt-10">世界观设定，如：修炼体系、货币、势力等。AI生成时会参考。</p>
+                        </div>
+                        <div class="tab-content" id="tab-forbidden">
+                            <div class="toolbar mb-10">
+                                <button class="btn btn-sm btn-secondary" id="btn-add-forbidden">
+                                    <i class="fas fa-plus"></i> 添加禁区
+                                </button>
+                                <button class="btn btn-sm btn-info" id="btn-import-forbidden-preset">
+                                    <i class="fas fa-file-import"></i> 导入推荐设定
+                                </button>
+                            </div>
+                            <div id="forbidden-list" class="dynamic-list">
+                                <!-- Dynamic items here -->
+                            </div>
+                            <p class="help-text mt-10">全局禁区，AI生成时会严格遵守。例如：主角不能死、不能出现现代科技等。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outline Page -->
+                <div class="page" id="page-outline">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-list-alt"></i> 章节大纲</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="tabs">
+                                <button class="tab-btn active" data-tab="tab-outline-list">大纲列表</button>
+                                <button class="tab-btn" data-tab="tab-outline-config">大纲配置</button>
+                            </div>
+
+                            <!-- List & Generate Tab -->
+                            <div class="tab-content active" id="tab-outline-list">
+                                <div class="form-group">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <label style="margin-bottom: 0;">核心创意与剧情卖点</label>
+                                        <button class="btn btn-sm btn-info" id="btn-brainstorm-summary">
+                                            <i class="fas fa-lightbulb"></i> AI 帮我想个卖点
+                                        </button>
+                                    </div>
+                                    <textarea id="outline-summary" class="form-control" rows="4"
+                                        placeholder="输入本阶段的核心创意、爽点或卖点（如：主角获得上古传承，开始扮猪吃虎）..."></textarea>
+                                </div>
+                                <div class="form-row mb-10">
+                                    <div class="col">
+                                        <div class="search-box">
+                                            <i class="fas fa-search"></i>
+                                            <input type="text" id="outline-search" class="form-control"
+                                                placeholder="筛选大纲标题或内容...">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-auto mr-auto">
+                                        <label>生成章节数</label>
+                                        <input type="number" id="outline-count" class="form-control" value="5" min="1"
+                                            max="10" style="width: 80px">
+                                    </div>
+                                    <div class="form-group col-auto align-self-end">
+                                        <button class="btn btn-primary" id="btn-generate-outline">
+                                            <i class="fas fa-magic"></i> 生成新大纲
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="outline-list mt-10" id="outline-list-container">
+                                    <!-- Generated outlines will appear here -->
+                                    <div class="empty-state">暂无大纲，请点击生成</div>
+                                </div>
+                            </div>
+
+                            <!-- Config Tab -->
+                            <div class="tab-content" id="tab-outline-config">
+                                <div class="alert alert-info mb-10">
+                                    <i class="fas fa-info-circle"></i>
+                                    自定义大纲生成的结构要求。AI将在每个章节的大纲中包含以下字段。
+                                </div>
+                                <div class="toolbar mb-10">
+                                    <button class="btn btn-sm btn-secondary" id="btn-add-outline-field">
+                                        <i class="fas fa-plus"></i> 添加字段
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" id="btn-reset-outline-config">
+                                        <i class="fas fa-undo"></i> 重置默认
+                                    </button>
+                                </div>
+                                <div id="outline-field-list" class="dynamic-list">
+                                    <!-- Dynamic items here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Page -->
+                <div class="page" id="page-generate">
+                    <div class="split-view">
+                        <div class="split-sidebar">
+                            <div class="panel-header">
+                                <h3>章节列表</h3>
+                                <button class="btn btn-sm btn-icon" id="btn-refresh-chapters"><i
+                                        class="fas fa-sync"></i></button>
+                            </div>
+                            <div class="search-container p-10">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="chapter-search" class="form-control form-control-sm"
+                                        placeholder="搜索章节...">
+                                </div>
+                            </div>
+                            <div class="chapter-list" id="chapter-list">
+                                <!-- Chapter items -->
+                            </div>
+                        </div>
+                        <div class="split-content">
+                            <div class="card full-height">
+                                <div class="card-header">
+                                    <h2><i class="fas fa-magic"></i> 小说生成</h2>
+                                    <div class="header-actions">
+                                        <button class="btn btn-secondary" id="btn-open-novel-folder"><i class="fas fa-folder-open"></i> 打开小说文件夹</button>
+                                        <button class="btn btn-danger" id="btn-stop-gen" disabled>停止</button>
+                                        <button class="btn btn-primary" id="btn-start-gen">开始生成</button>
+                                    </div>
+                                </div>
+                                <div class="gen-controls">
+                                    <!-- Mode Selection -->
+                                    <div class="control-section mb-10">
+                                        <label class="section-label">写作模式</label>
+                                        <div class="mode-selector">
+                                            <label class="radio-label">
+                                                <input type="radio" name="gen-mode" value="direct" id="gen-mode-direct"
+                                                    checked>
+                                                <span><i class="fas fa-pen"></i> 直接写作</span>
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="gen-mode" value="plan" id="gen-mode-plan">
+                                                <span><i class="fas fa-project-diagram"></i> 先策划再写</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Context Controls -->
+                                    <div class="control-section mb-10">
+                                        <label class="section-label">上下文引用</label>
+                                        <div class="checkbox-group">
+                                            <label><input type="checkbox" id="gen-use-state" checked> 引用角色状态</label>
+                                            <label><input type="checkbox" id="gen-use-world" checked> 引用世界观</label>
+                                            <label><input type="checkbox" id="gen-use-outline" checked> 引用大纲</label>
+                                            <label><input type="checkbox" id="gen-use-context" checked> 上文回顾</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Update Controls -->
+                                    <div class="control-section">
+                                        <div class="checkbox-group">
+                                            <label class="highlight-label">
+                                                <input type="checkbox" id="gen-update-state">
+                                                <span class="text-warning">⚠ 允许AI更新角色状态</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row align-items-center mt-10">
+                                        <div class="col-auto">
+                                            <label>章节序号</label>
+                                            <input type="number" id="gen-chapter-index"
+                                                class="form-control form-control-sm" style="width: 80px;" value="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="editor-container" id="editor-container">
+                                    <div id="gen-progress-container" class="gen-progress-container"
+                                        style="display: none;">
+                                        <div class="progress-info">
+                                            <span id="progress-text">正在生成内容...</span>
+                                            <span id="progress-percent">0%</span>
+                                        </div>
+                                        <div class="progress-track">
+                                            <div id="gen-progress-bar" class="progress-bar-fill"></div>
+                                        </div>
+                                        <p class="progress-subtext">AI 正在为您精心创作，请稍候...</p>
+                                    </div>
+                                    <div id="gen-content-display" class="content-display" contenteditable="true"></div>
+                                </div>
+                                <div class="status-bar">
+                                    <span id="gen-status-text">就绪</span>
+                                    <span id="gen-word-count">0 字</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Config Page -->
+                <div class="page" id="page-api-config">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-key"></i> 模型API配置</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="api-list">
+                                <div class="api-item active" data-id="deepseek">
+                                    <div class="api-header">
+                                        <h3>DeepSeek (深度求索)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-deepseek" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-deepseek" class="form-control"
+                                                value="deepseek-chat">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-deepseek" class="form-control"
+                                                value="https://api.deepseek.com/v1/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="moonshot">
+                                    <div class="api-header">
+                                        <h3>Moonshot (Kimi 助手)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-moonshot" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-moonshot" class="form-control"
+                                                value="moonshot-v1-8k">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-moonshot" class="form-control"
+                                                value="https://api.moonshot.cn/v1/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="zhipu">
+                                    <div class="api-header">
+                                        <h3>Zhipu (智谱清言)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-zhipu" class="form-control"
+                                                placeholder="key">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-zhipu" class="form-control" value="glm-4">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-zhipu" class="form-control"
+                                                value="https://open.bigmodel.cn/api/paas/v4/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="qwen">
+                                    <div class="api-header">
+                                        <h3>Qwen (通义千问)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-qwen" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-qwen" class="form-control"
+                                                value="qwen-turbo">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-qwen" class="form-control"
+                                                value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="doubao">
+                                    <div class="api-header">
+                                        <h3>Doubao (豆包/火山引擎)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-doubao" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-doubao" class="form-control"
+                                                value="doubao-pro-32k">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-doubao" class="form-control"
+                                                value="https://ark.cn-beijing.volces.com/api/v3/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="gemini">
+                                    <div class="api-header">
+                                        <h3>Gemini (谷歌)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-gemini" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-gemini" class="form-control"
+                                                value="gemini-1.5-flash">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-gemini" class="form-control"
+                                                value="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="local">
+                                    <div class="api-header">
+                                        <h3>Local (本地模型/Ollama)</h3>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <button class="btn btn-sm btn-secondary" id="btn-test-local" title="测试本地连接">
+                                                <i class="fas fa-plug"></i> 测试连接
+                                            </button>
+                                            <label class="switch">
+                                                <input type="checkbox">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <select id="api-model-local" class="form-control">
+                                                <option value="llama3">Llama 3 (推荐)</option>
+                                                <option value="llama3:8b">Llama 3 (8B 轻量版)</option>
+                                                <option value="llama3.1">Llama 3.1</option>
+                                                <option value="llama3.1:8b">Llama 3.1 (8B)</option>
+                                                <option value="mistral">Mistral</option>
+                                                <option value="mistral:7b">Mistral (7B)</option>
+                                                <option value="qwen2">Qwen 2</option>
+                                                <option value="qwen2:7b">Qwen 2 (7B)</option>
+                                                <option value="qwen2:1.5b">Qwen 2 (1.5B 微型)</option>
+                                                <option value="gemma2">Gemma 2</option>
+                                                <option value="phi3">Phi-3</option>
+                                                <option value="deepseek-coder-v2">DeepSeek Coder</option>
+                                                <option value="zephyr">Zephyr</option>
+                                                <option value="codellama">Code Llama</option>
+                                                <option value="custom">自定义模型...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>自定义 Model 名称</label>
+                                            <input type="text" id="api-model-local-custom" class="form-control"
+                                                placeholder="例如：my-custom-model" disabled>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-local" class="form-control"
+                                                value="http://localhost:11434/v1/chat/completions">
+                                            <small class="text-muted">默认端口: 11434 (Ollama)</small>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-50">
+                                                <label>
+                                                    <input type="checkbox" id="local-model-check" checked>
+                                                    自动检测本地模型
+                                                </label>
+                                                <small class="text-muted">检测可用的Ollama模型</small>
+                                            </div>
+                                            <div class="form-group col-50">
+                                                <button class="btn btn-sm btn-primary" id="btn-download-model" title="快速下载模型">
+                                                    <i class="fas fa-download"></i> 下载推荐模型
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" id="local-models-list" style="display: none;">
+                                            <label>已安装的模型</label>
+                                            <div class="local-models-display" id="local-models-display">
+                                                <span class="text-muted">点击检测按钮获取本地模型列表</span>
+                                            </div>
+                                        </div>
+                                        <div class="alert alert-info" style="margin-top: 10px;">
+                                            <i class="fas fa-info-circle"></i> 本地模型使用提示：
+                                            <ul style="margin-top: 5px;">
+                                                <li>首次使用需下载模型，推荐：<code>llama3</code> 或 <code>qwen2:1.5b</code> (快速测试)</li>
+                                                <li>生成速度取决于CPU/GPU性能，8G显存建议使用7B以下模型</li>
+                                                <li>所有数据保存在本地，保护隐私</li>
+                                                <li>支持中文、英文等多语言</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="siliconflow">
+                                    <div class="api-header">
+                                        <h3>SiliconFlow (硅基流动)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-siliconflow" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-siliconflow" class="form-control"
+                                                value="deepseek-ai/DeepSeek-V3">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-siliconflow" class="form-control"
+                                                value="https://api.siliconflow.cn/v1/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="api-item" data-id="openai">
+                                    <div class="api-header">
+                                        <h3>OpenAI (海外/GPT)</h3>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="api-form">
+                                        <div class="form-group">
+                                            <label>API Key</label>
+                                            <input type="password" id="api-key-openai" class="form-control"
+                                                placeholder="sk-...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Model</label>
+                                            <input type="text" id="api-model-openai" class="form-control"
+                                                value="gpt-3.5-turbo">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Endpoint</label>
+                                            <input type="text" id="api-endpoint-openai" class="form-control"
+                                                value="https://api.openai.com/v1/chat/completions">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-primary" id="btn-save-api">保存配置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Navigation -->
+        <div class="mobile-nav">
+            <div class="mobile-nav-item active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </div>
+            <div class="mobile-nav-item" data-page="prompt">
+                <i class="fas fa-pen-fancy"></i>
+                <span>题材</span>
+            </div>
+            <div class="mobile-nav-item" data-page="outline">
+                <i class="fas fa-list-alt"></i>
+                <span>大纲</span>
+            </div>
+            <div class="mobile-nav-item" data-page="generate">
+                <i class="fas fa-magic"></i>
+                <span>写作</span>
+            </div>
+            <div class="mobile-nav-item" data-page="api-config">
+                <i class="fas fa-key"></i>
+                <span>设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Selection Modal -->
+    <div id="modal-project-picker" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>选择已有题材</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="project-list-container" class="project-picker-list">
+                    <!-- Projects will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Styling -->
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            margin: 10% auto;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .close-modal {
+            color: var(--text-secondary);
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .project-picker-item {
+            padding: 12px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-primary);
+        }
+
+        .project-picker-item:hover {
+            background-color: var(--bg-tertiary);
+            border-color: var(--accent-color);
+        }
+
+        .project-picker-item i {
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+
+        .project-picker-item span {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="js/templates.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/text-analyzer.js"></script>
+    <script src="js/prompt-manager.js"></script>
+    <script src="js/settings-manager.js"></script>
+    <script src="js/outline-generator.js"></script>
+    <script src="js/novel-generator.js"></script>
+    <script src="js/great-architect.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

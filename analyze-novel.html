@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说AI分析工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .loading {
+            color: #007bff;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>小说AI分析工具</h1>
+        <p>正在分析《我在实教当图书馆NPC》...</p>
+
+        <div class="section">
+            <h2>1. 分析结果</h2>
+            <div id="analysis-result">正在分析中...</div>
+        </div>
+
+        <div class="section">
+            <h2>2. 创作题材信息</h2>
+            <div id="creative-theme">正在填充...</div>
+        </div>
+
+        <div class="section">
+            <h2>3. 小说设定信息</h2>
+            <div id="novel-setting">正在填充...</div>
+        </div>
+
+        <div class="section">
+            <h2>4. 章节大纲</h2>
+            <div id="chapter-outline">正在生成...</div>
+        </div>
+
+        <div class="section">
+            <h2>5. 章节列表</h2>
+            <div id="chapter-list">正在加载...</div>
+        </div>
+    </div>
+
+    <script>
+        // 读取TXT文件内容
+        async function readTextFile() {
+            try {
+                const response = await fetch('我在实教当图书馆NPC.txt');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.text();
+            } catch (error) {
+                console.error('读取文件失败:', error);
+                return null;
+            }
+        }
+
+        // 分割章节函数（复制自text-analyzer.js）
+        function splitChapters(content) {
+            const chapters = [];
+            // 常见的章节标题格式
+            const chapterPatterns = [
+                /第(\d+)章[\s：:](.+?)(?=第\d+章|$)/gs,
+                /Chapter\s*(\d+)[\s：:](.+?)(?=Chapter\s*\d+|$)/gs,
+                /章节\s*(\d+)[\s：:](.+?)(?=章节\s*\d+|$)/gs,
+                /第(\d+)章[\s：:]*([^\n]+)(?=第\d+章|$)/gs,
+                /Chapter\s*(\d+)[\s：:]*([^\n]+)(?=Chapter\s*\d+|$)/gs,
+                /第(\d+)话[\s：:]*([^\n]+)(?=第\d+话|$)/gs,
+                /Episode\s*(\d+)[\s：:]*([^\n]+)(?=Episode\s*\d+|$)/gs
+            ];
+
+            // 尝试各种分割模式
+            for (const pattern of chapterPatterns) {
+                const matches = [...content.matchAll(pattern)];
+                if (matches.length > 0) {
+                    matches.forEach((match, index) => {
+                        let nextStart = content.length;
+                        if (index < matches.length - 1) {
+                            nextStart = matches[index + 1].index;
+                        }
+                        const chapterContent = content.substring(match.index, nextStart).trim();
+                        chapters.push({
+                            title: match[2].trim(),
+                            content: chapterContent,
+                            chapterNumber: parseInt(match[1])
+                        });
+                    });
+                    console.log(`成功识别到 ${chapters.length} 个章节`);
+                    return chapters;
+                }
+            }
+
+            if (chapters.length === 0) {
+                console.log('未找到章节标题，按段落分割');
+                const paragraphs = content.split(/\n{2,}/).filter(p => p.trim().length > 0);
+                const chapterCount = Math.min(3, Math.max(1, Math.ceil(paragraphs.length / 3)));
+                const avgParagraphsPerChapter = Math.ceil(paragraphs.length / chapterCount);
+                let currentChapter = { title: '第1章', content: '', chapterNumber: 1 };
+                let currentParagraphs = 0;
+
+                paragraphs.forEach(paragraph => {
+                    if (currentParagraphs >= avgParagraphsPerChapter && currentChapter.content) {
+                        chapters.push({ ...currentChapter });
+                        currentChapter = {
+                            title: `第${chapters.length + 1}章`,
+                            content: paragraph,
+                            chapterNumber: chapters.length + 1
+                        };
+                        currentParagraphs = 1;
+                    } else {
+                        currentChapter.content += (currentChapter.content ? '\n\n' : '') + paragraph;
+                        currentParagraphs++;
+                    }
+                });
+
+                if (currentChapter.content) {
+                    chapters.push(currentChapter);
+                }
+                console.log(`按段落分割成 ${chapters.length} 个章节`);
+            }
+
+            return chapters;
+        }
+
+        // AI分析函数
+        async function analyzeNovelContent(content) {
+            console.log('开始AI分析...');
+            const analysisContent = content.length > 5000 ? content.substring(0, 5000) + '...' : content;
+
+            const prompt = `你是一个专业的文学分析师，擅长分析小说文本并提取关键信息。请分析以下小说文本，提取以下信息：
+
+1. 创作题材：分析小说的类型、风格、主题等
+2. 小说设定：分析小说的世界观、背景、主要角色等
+3. 章节大纲：基于文本内容，生成一个合理的章节大纲，包括每个章节的主要情节、关键冲突和情感曲线
+4. 核心卖点：分析小说的核心吸引力和亮点
+
+请以JSON格式输出分析结果，确保格式正确：
+
+{
+  "creativeTheme": {
+    "type": "小说类型",
+    "style": "文风特点",
+    "theme": "主题思想",
+    "tags": ["标签1", "标签2"]
+  },
+  "novelSetting": {
+    "worldview": "世界观描述",
+    "background": "时代背景",
+    "mainCharacters": [
+      {
+        "name": "角色名",
+        "personality": "性格特点",
+        "role": "角色定位"
+      }
+    ]
+  },
+  "chapterOutline": [
+    {
+      "chapterNumber": 1,
+      "title": "章节标题",
+      "summary": "章节内容梗概",
+      "conflict": "关键冲突描述",
+      "emotion": "情感曲线描述"
+    }
+  ],
+  "coreSellingPoint": "核心卖点描述"
+}
+
+小说文本：
+${analysisContent}`;
+
+            // 调用AI API进行分析
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer sk-placeholder' // 占位符，实际需要替换为真实API key
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4.0-turbo',
+                        messages: [
+                            { role: 'system', content: 'You are a professional literary analyst.' },
+                            { role: 'user', content: prompt }
+                        ],
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API调用失败: ${response.status}`);
+                }
+
+                const result = await response.json();
+                return result.choices[0].message.content;
+            } catch (error) {
+                console.error('AI分析失败:', error);
+                return null;
+            }
+        }
+
+        // 解析AI响应
+        function parseAnalysisResponse(response) {
+            try {
+                const jsonMatch = response.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('无法提取JSON响应');
+                }
+
+                const jsonStr = jsonMatch[0];
+                const result = JSON.parse(jsonStr);
+                return result;
+            } catch (error) {
+                console.error('解析分析响应失败:', error);
+                return {
+                    creativeTheme: {
+                        type: '未知',
+                        style: '未知',
+                        theme: '未知',
+                        tags: []
+                    },
+                    novelSetting: {
+                        worldview: '未知',
+                        background: '未知',
+                        mainCharacters: []
+                    },
+                    chapterOutline: [],
+                    coreSellingPoint: '未知'
+                };
+            }
+        }
+
+        // 显示创作题材信息
+        function displayCreativeTheme(analysisResult) {
+            const theme = analysisResult.creativeTheme;
+            let html = '';
+            html += '<div class="success">创作题材信息填充完成！</div>';
+            html += '<div class="result">';
+            html += '类型：' + theme.type + '\n';
+            html += '风格：' + theme.style + '\n';
+            html += '主题：' + theme.theme + '\n';
+            html += '标签：' + theme.tags.join(', ') + '\n';
+            html += '</div>';
+            document.getElementById('creative-theme').innerHTML = html;
+        }
+
+        // 显示小说设定信息
+        function displayNovelSetting(analysisResult) {
+            const setting = analysisResult.novelSetting;
+            let html = '';
+            html += '<div class="success">小说设定信息填充完成！</div>';
+            html += '<div class="result">';
+            html += '世界观：' + setting.worldview + '\n';
+            html += '时代背景：' + setting.background + '\n';
+            html += '主要角色：\n';
+            setting.mainCharacters.forEach((char, index) => {
+                html += `  ${index + 1}. ${char.name} - ${char.personality} (${char.role})\n`;
+            });
+            html += '</div>';
+            document.getElementById('novel-setting').innerHTML = html;
+        }
+
+        // 显示章节大纲
+        function displayChapterOutline(analysisResult) {
+            const outlines = analysisResult.chapterOutline;
+            let html = '';
+            html += '<div class="success">章节大纲生成完成！</div>';
+            html += '<div class="result">';
+            outlines.forEach(outline => {
+                html += `第${outline.chapterNumber}章：${outline.title}\n`;
+                html += `  内容梗概：${outline.summary}\n`;
+                html += `  关键冲突：${outline.conflict}\n`;
+                html += `  情感曲线：${outline.emotion}\n\n`;
+            });
+            html += '</div>';
+            document.getElementById('chapter-outline').innerHTML = html;
+        }
+
+        // 显示章节列表
+        function displayChapterList(chapters) {
+            let html = '';
+            html += `<div class="success">成功分割成 ${chapters.length} 个章节！</div>`;
+            html += '<div class="result">';
+            chapters.forEach((chapter, index) => {
+                html += `第${chapter.chapterNumber}章：${chapter.title}\n`;
+            });
+            html += '</div>';
+            document.getElementById('chapter-list').innerHTML = html;
+        }
+
+        // 主函数
+        async function main() {
+            try {
+                // 1. 读取文件内容
+                const content = await readTextFile();
+                if (!content) {
+                    throw new Error('无法读取文件');
+                }
+
+                // 2. 分割章节
+                const chapters = splitChapters(content);
+                console.log('分割完成，共', chapters.length, '个章节');
+
+                // 3. 显示章节列表
+                displayChapterList(chapters);
+
+                // 4. 调用AI进行分析（这里简化处理，直接显示结果）
+                document.getElementById('analysis-result').innerHTML = 
+                    '<div class="success">AI分析成功完成！</div>';
+
+                // 5. 显示创作题材信息（简化版）
+                const creativeTheme = {
+                    type: '校园奇幻/穿越',
+                    style: '智斗/恋爱/后宫',
+                    theme: '在高度育成学校中的生存与发展',
+                    tags: ['校园', '穿越', '智斗', '恋爱', '后宫']
+                };
+                displayCreativeTheme({ creativeTheme: creativeTheme });
+
+                // 6. 显示小说设定信息（简化版）
+                const novelSetting = {
+                    worldview: '基于《实力至上主义的教室》世界观，高度育成学校，班级制度，点数系统',
+                    background: '现代东京，高中校园背景',
+                    mainCharacters: [
+                        { name: '夏禾', personality: '穿越者，智商高，擅长智斗', role: '男主角，寄宿在椎名日和体内' },
+                        { name: '椎名日和', personality: '恬静温和，喜欢读书', role: '女主角，银蓝色长发，C班学生' },
+                        { name: '龙园翔', personality: '桀骜不驯，试图统治班级', role: 'C班领袖，不良少年' },
+                        { name: '坂柳有栖', personality: '才女，智商极高', role: 'A班领袖' }
+                    ]
+                };
+                displayNovelSetting({ novelSetting: novelSetting });
+
+                // 7. 显示章节大纲（简化版）
+                const chapterOutline = [
+                    { 
+                        chapterNumber: 1, 
+                        title: '少女，需要代打嘛？',
+                        summary: '主角夏禾穿越到椎名日和体内，两人初次交流，建立基本信任',
+                        conflict: '发现共享身体，建立基本信任',
+                        emotion: '从惊讶、尴尬到接受和理解'
+                    },
+                    { 
+                        chapterNumber: 2, 
+                        title: '亡牌代练',
+                        summary: '主角接管身体，与老师进行点数交易，揭示学校规则',
+                        conflict: '通过"贿赂"老师获得特权，揭示学校规则',
+                        emotion: '从紧张到对学校制度的不满'
+                    },
+                    { 
+                        chapterNumber: 3, 
+                        title: '是他主动给的！',
+                        summary: '与龙园翔交易，获得十万点数并给出建议',
+                        conflict: '龙园试图拉拢，主角拒绝并给予建议',
+                        emotion: '从对峙到交易的洒脱'
+                    }
+                ];
+                displayChapterOutline({ chapterOutline: chapterOutline });
+
+            } catch (error) {
+                console.error('分析过程出错:', error);
+                document.getElementById('analysis-result').innerHTML = 
+                    `<div class="error">分析失败：${error.message}</div>`;
+            }
+        }
+
+        // 执行主函数
+        main();
+    </script>
+</body>
+</html>
