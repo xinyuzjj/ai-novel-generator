@@ -1,5 +1,6 @@
 class PromptManager {
     constructor() {
+        this.currentMode = 'short-story';
         this.init();
     }
 
@@ -91,7 +92,7 @@ class PromptManager {
     }
 
     async loadCurrentProject() {
-        const project = storage.loadProject();
+        const project = storage.loadProjectForMode(this.currentMode);
         if (!project) return;
 
         document.getElementById('prompt-category').value = project.category || 'xuanhuan';
@@ -107,7 +108,7 @@ class PromptManager {
     }
 
     showProjectPicker() {
-        const projects = storage.listProjects();
+        const projects = storage.listProjects(this.currentMode);
         const container = document.getElementById('project-list-container');
         container.innerHTML = '';
 
@@ -130,7 +131,7 @@ class PromptManager {
     }
 
     async selectProject(projectName) {
-        if (storage.switchProject(projectName)) {
+        if (storage.switchProject(projectName, this.currentMode)) {
             document.getElementById('modal-project-picker').style.display = 'none';
             await this.refreshAllComponents();
             alert(`已成功加载题材：${projectName}`);
@@ -142,11 +143,21 @@ class PromptManager {
 
         // Reload settings and list in other pages
         if (typeof settingsManager !== 'undefined') settingsManager.loadSettings();
-        if (typeof outlineGenerator !== 'undefined') outlineGenerator.renderOutlineList();
-        if (typeof novelGenerator !== 'undefined') {
-            document.getElementById('chapter-search').value = '';
-            novelGenerator.renderChapterList();
-            novelGenerator.resetEditor();
+        
+        if (this.currentMode === 'short-story') {
+            if (typeof outlineGenerator !== 'undefined') outlineGenerator.renderOutlineList();
+            if (typeof novelGenerator !== 'undefined') {
+                document.getElementById('chapter-search').value = '';
+                novelGenerator.renderChapterList();
+                novelGenerator.resetEditor();
+            }
+        } else if (this.currentMode === 'medium-length') {
+            if (typeof volumeGenerator !== 'undefined') {
+                volumeGenerator.renderVolumeList();
+                volumeGenerator.updateVolumeSelect();
+                volumeGenerator.updateVolumeStats();
+                volumeGenerator.renderVolumeChapterList();
+            }
         }
     }
 
@@ -179,7 +190,7 @@ class PromptManager {
             sellingPoint: document.getElementById('outline-summary').value
         };
 
-        if (storage.saveProject(projectData)) {
+        if (storage.saveProjectForMode(this.currentMode, projectData)) {
             this.refreshAllComponents();
             alert('题材保存成功！所有模块已切换至此项目。');
         } else {
@@ -188,7 +199,7 @@ class PromptManager {
     }
 
     getSystemPrompt() {
-        const project = storage.loadProject();
+        const project = storage.loadProjectForMode(this.currentMode);
         return `你是一个专业的网文作家。
 当前小说设定：
 分类：${project.category}
@@ -274,14 +285,14 @@ ${project.rules}
         }
 
         // 保存到项目数据
-        const project = storage.loadProject();
+        const project = storage.loadProjectForMode(this.currentMode);
         if (project) {
             project.category = document.getElementById('prompt-category').value;
             project.name = document.getElementById('prompt-project-name').value;
             project.authorRole = document.getElementById('prompt-author-role').value;
             project.rules = document.getElementById('prompt-rules').value;
             project.sellingPoint = document.getElementById('outline-summary').value;
-            storage.saveProject(project);
+            storage.saveProjectForMode(this.currentMode, project);
         }
 
         return true;

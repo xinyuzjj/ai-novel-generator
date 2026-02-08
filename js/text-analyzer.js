@@ -1,5 +1,6 @@
 class TextAnalyzer {
     constructor() {
+        this.currentMode = 'short-story';
         this.init();
     }
 
@@ -322,6 +323,8 @@ ${analysisContent}`;
                 let errorMessage = `API Error: ${response.status}`;
                 if (response.status === 401) {
                     errorMessage = 'API Key无效或过期，请重新配置API Key';
+                } else if (response.status === 402) {
+                    errorMessage = 'API配额不足或需要付费，请检查账户余额或升级套餐';
                 } else if (response.status === 403) {
                     errorMessage = '访问被拒绝，请检查API Key是否正确或是否有权限访问该模型';
                 } else if (response.status === 404) {
@@ -560,7 +563,7 @@ ${analysisContent}`;
         }
 
         // 保存到设置
-        let settings = storage.loadSettings();
+        let settings = storage.loadSettingsForMode(this.currentMode);
         if (characterState.length > 0) {
             settings.characterState = characterState;
         }
@@ -588,7 +591,7 @@ ${analysisContent}`;
             settings.worldSettings = worldSettings;
         }
         
-        storage.saveSettings(settings);
+        storage.saveSettingsForMode(this.currentMode, settings);
 
         // 触发UI刷新
         window.dispatchEvent(new CustomEvent('settingsUpdated'));
@@ -635,9 +638,9 @@ ${analysisContent}`;
         }));
 
         if (outlines.length > 0) {
-            storage.save('outlines', outlines);
+            storage.saveOutlinesForMode(this.currentMode, outlines);
             // 刷新大纲列表
-            if (typeof outlineGenerator !== 'undefined') {
+            if (this.currentMode === 'short-story' && typeof outlineGenerator !== 'undefined') {
                 outlineGenerator.renderOutlineList();
             }
             
@@ -656,8 +659,8 @@ ${analysisContent}`;
             return false;
         }
 
-        // 使用novelGenerator的fillFromAnalysis方法来填充
-        if (typeof novelGenerator !== 'undefined' && novelGenerator.fillFromAnalysis) {
+        // 使用novelGenerator的fillFromAnalysis方法来填充（仅短篇模式）
+        if (this.currentMode === 'short-story' && typeof novelGenerator !== 'undefined' && novelGenerator.fillFromAnalysis) {
             return novelGenerator.fillFromAnalysis(chapters);
         }
 
@@ -670,7 +673,7 @@ ${analysisContent}`;
         });
 
         // 刷新章节列表
-        if (typeof novelGenerator !== 'undefined' && novelGenerator.renderChapterList) {
+        if (this.currentMode === 'short-story' && typeof novelGenerator !== 'undefined' && novelGenerator.renderChapterList) {
             novelGenerator.renderChapterList();
         }
 
@@ -748,11 +751,11 @@ ${analysisContent}`;
             });
             
             console.log(`准备保存大纲，共 ${outlines.length} 个章节`);
-            storage.save('outlines', outlines);
+            storage.saveOutlinesForMode(this.currentMode, outlines);
             console.log(`大纲保存成功，共 ${outlines.length} 章`);
 
             // 4. 刷新章节列表
-            if (typeof novelGenerator !== 'undefined' && novelGenerator.renderChapterList) {
+            if (this.currentMode === 'short-story' && typeof novelGenerator !== 'undefined' && novelGenerator.renderChapterList) {
                 console.log('刷新章节列表...');
                 novelGenerator.renderChapterList();
                 console.log('章节列表刷新成功');
@@ -1019,6 +1022,8 @@ ${chapterInfos}`;
                 let errorMessage = `API Error: ${response.status}`;
                 if (response.status === 401) {
                     errorMessage = 'API Key无效或过期，请重新配置API Key';
+                } else if (response.status === 402) {
+                    errorMessage = 'API配额不足或需要付费，请检查账户余额或升级套餐';
                 } else if (response.status === 403) {
                     errorMessage = '访问被拒绝，请检查API Key是否正确或是否有权限访问该模型';
                 } else if (response.status === 404) {
@@ -1114,7 +1119,7 @@ ${chapterInfos}`;
         console.log('\n3. 保存大纲...');
 
         // 保存完整大纲
-        storage.save('full_outlines', analysisResult.fullOutline);
+        storage.saveForMode(this.currentMode, 'full_outlines', analysisResult.fullOutline);
         console.log('   ✓ 完整章节大纲已保存');
 
         // 更新基础大纲（用于软件显示）
@@ -1124,7 +1129,7 @@ ${chapterInfos}`;
             conflict: outline.conflict,
             emotion: outline.emotion
         }));
-        storage.save('outlines', basicOutlines);
+        storage.saveOutlinesForMode(this.currentMode, basicOutlines);
         console.log('   ✓ 基础大纲已更新');
 
         // 显示前10个章节
@@ -1140,7 +1145,7 @@ ${chapterInfos}`;
         }
 
         // 刷新大纲列表
-        if (typeof outlineGenerator !== 'undefined') {
+        if (this.currentMode === 'short-story' && typeof outlineGenerator !== 'undefined') {
             outlineGenerator.renderOutlineList();
         }
 

@@ -1,5 +1,6 @@
 class App {
     constructor() {
+        this.currentMode = 'short-story';
         this.init();
     }
 
@@ -8,10 +9,11 @@ class App {
         this.bindNavigation();
         this.bindWindowControls();
         this.bindThemeToggle();
+        this.bindImportEvents();
     }
 
     loadTheme() {
-        const settings = storage.loadSettings();
+        const settings = storage.loadSettingsForMode(this.currentMode);
         if (settings.theme === 'light') {
             document.body.classList.add('light-theme');
             this.updateThemeIcons('light');
@@ -25,10 +27,9 @@ class App {
         const isLight = document.body.classList.toggle('light-theme');
         const theme = isLight ? 'light' : 'dark';
 
-        // Save to settings
-        const settings = storage.loadSettings();
+        const settings = storage.loadSettingsForMode(this.currentMode);
         settings.theme = theme;
-        storage.saveSettings(settings);
+        storage.saveSettingsForMode(this.currentMode, settings);
 
         this.updateThemeIcons(theme);
     }
@@ -53,24 +54,119 @@ class App {
     }
 
     bindNavigation() {
-        const navItems = document.querySelectorAll('.menu-item, .mobile-nav-item');
+        const navItems = document.querySelectorAll('.menu-item');
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 const target = item.getAttribute('data-page');
                 this.switchToPage(target);
             });
         });
+        
+        // 绑定模式切换事件
+        this.bindModeSwitching();
+    }
+    
+    bindModeSwitching() {
+        const modeItems = document.querySelectorAll('.mode-item');
+        modeItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const mode = item.getAttribute('data-mode');
+                this.switchMode(mode);
+            });
+        });
+    }
+    
+    switchMode(mode) {
+        this.currentMode = mode;
+        
+        // 移除所有模式的active状态
+        document.querySelectorAll('.mode-item').forEach(i => i.classList.remove('active'));
+        // 添加当前模式的active状态
+        document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+        
+        // 隐藏所有模式内容
+        document.querySelectorAll('.mode-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        // 显示当前模式的内容
+        document.querySelector(`[data-for-mode="${mode}"]`).style.display = 'block';
+        
+        // 根据模式切换到对应首页
+        let defaultPage;
+        switch(mode) {
+            case 'short-story':
+                defaultPage = 'home';
+                break;
+            case 'medium-length':
+                defaultPage = 'volume-home';
+                break;
+            case 'great-architect':
+                defaultPage = 'architect-home';
+                break;
+            default:
+                defaultPage = 'home';
+        }
+        
+        this.switchToPage(defaultPage);
+        
+        // 初始化对应模式的功能模块
+        this.initModeModules(mode);
+    }
+
+    initModeModules(mode) {
+        switch(mode) {
+            case 'short-story':
+                if (typeof novelGenerator !== 'undefined') {
+                    novelGenerator.init();
+                }
+                if (typeof outlineGenerator !== 'undefined') {
+                    outlineGenerator.init();
+                }
+                if (typeof settingsManager !== 'undefined') {
+                    settingsManager.currentMode = 'short-story';
+                    settingsManager.loadSettings();
+                }
+                if (typeof textAnalyzer !== 'undefined') {
+                    textAnalyzer.currentMode = 'short-story';
+                }
+                if (typeof promptManager !== 'undefined') {
+                    promptManager.currentMode = 'short-story';
+                    promptManager.loadCurrentProject();
+                }
+                break;
+            case 'medium-length':
+                if (typeof volumeGenerator !== 'undefined') {
+                    volumeGenerator.init();
+                }
+                if (typeof settingsManager !== 'undefined') {
+                    settingsManager.currentMode = 'medium-length';
+                    settingsManager.loadSettings();
+                }
+                if (typeof textAnalyzer !== 'undefined') {
+                    textAnalyzer.currentMode = 'medium-length';
+                }
+                if (typeof promptManager !== 'undefined') {
+                    promptManager.currentMode = 'medium-length';
+                    promptManager.loadCurrentProject();
+                }
+                break;
+            case 'great-architect':
+                if (typeof greatArchitect !== 'undefined') {
+                    greatArchitect.init();
+                }
+                break;
+        }
     }
 
     switchToPage(pageId) {
         // Remove active from all nav items
-        document.querySelectorAll('.menu-item, .mobile-nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
         // Hide all pages
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 
         // Add active to current nav items
         document.querySelectorAll(`[data-page="${pageId}"]`).forEach(i => {
-            if (i.classList.contains('menu-item') || i.classList.contains('mobile-nav-item')) {
+            if (i.classList.contains('menu-item')) {
                 i.classList.add('active');
             }
         });
@@ -81,11 +177,21 @@ class App {
             targetPage.classList.add('active');
         }
 
-        // Special handling for novel generator page
+        // Special handling for different pages
         if (pageId === 'generate') {
             // Re-initialize novel generator to ensure events are bound
             if (typeof novelGenerator !== 'undefined') {
                 novelGenerator.init();
+            }
+        } else if (pageId === 'volume-home' || pageId === 'volume-create' || pageId === 'volume-list' || pageId === 'volume-outline' || pageId === 'volume-generate' || pageId === 'volume-write') {
+            // Re-initialize volume generator to ensure events are bound
+            if (typeof volumeGenerator !== 'undefined') {
+                volumeGenerator.init();
+            }
+        } else if (pageId === 'architect-home' || pageId === 'architect-expand' || pageId === 'architect-build' || pageId === 'architect-write' || pageId === 'architect-optimize') {
+            // Re-initialize great architect to ensure events are bound
+            if (typeof greatArchitect !== 'undefined') {
+                greatArchitect.init();
             }
         }
 
@@ -96,6 +202,10 @@ class App {
 
     navigateTo(pageId) {
         this.switchToPage(pageId);
+    }
+
+    getCurrentMode() {
+        return this.currentMode;
     }
 
     bindWindowControls() {
@@ -277,14 +387,6 @@ class App {
                 startImportBtn.disabled = false;
             }
         }
-    }
-
-    init() {
-        this.loadTheme();
-        this.bindNavigation();
-        this.bindWindowControls();
-        this.bindThemeToggle();
-        this.bindImportEvents();
     }
 }
 

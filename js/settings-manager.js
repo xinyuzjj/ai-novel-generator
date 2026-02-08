@@ -1,5 +1,6 @@
 class SettingsManager {
     constructor() {
+        this.currentMode = 'short-story';
         this.init();
     }
 
@@ -159,7 +160,7 @@ class SettingsManager {
     }
 
     loadSettings() {
-        const settings = storage.loadSettings();
+        const settings = storage.loadSettingsForMode(this.currentMode);
 
         // Character State - Dynamic List
         const charState = settings.characterState || [];
@@ -197,7 +198,7 @@ class SettingsManager {
                 characterInfo: characterInfo
             };
 
-            if (storage.saveSettings(settings)) {
+            if (storage.saveSettingsForMode(this.currentMode, settings)) {
                 alert('设定保存成功！');
             }
         } catch (e) {
@@ -499,11 +500,11 @@ class SettingsManager {
         }
 
         // 保存到存储
-        const settings = storage.loadSettings();
+        const settings = storage.loadSettingsForMode(this.currentMode);
         settings.characterState = this.getCharacterStates();
         settings.worldSettings = this.getWorldSettings();
         settings.characterInfo = this.getCharacterInfo();
-        storage.saveSettings(settings);
+        storage.saveSettingsForMode(this.currentMode, settings);
 
         // 触发UI刷新
         window.dispatchEvent(new CustomEvent('settingsUpdated'));

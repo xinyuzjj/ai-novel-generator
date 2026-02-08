@@ -12,39 +12,75 @@ class Storage {
         }
     }
 
-    ensureDataDir() {
-        if (!fs.existsSync(this.dataDir)) {
+    // 获取模式特定的前缀
+    getModePrefix(mode) {
+        switch(mode) {
+            case 'short-story':
+                return this.PREFIX + 'short_';
+            case 'medium-length':
+                return this.PREFIX + 'medium_';
+            case 'great-architect':
+                return this.PREFIX + 'architect_';
+            default:
+                return this.PREFIX;
+        }
+    }
+
+    // 模式特定的保存方法
+    saveForMode(mode, key, data) {
+        const prefix = this.getModePrefix(mode);
+        if (this.isElectron) {
             try {
-                fs.mkdirSync(this.dataDir, { recursive: true });
+                const filePath = this.getFilePathForMode(mode, key);
+                const dir = path.dirname(filePath);
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir, { recursive: true });
+                }
+                fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+                return true;
             } catch (e) {
-                console.error('Failed to create data directory:', e);
+                console.error(`File save error for ${key} in mode ${mode}:`, e);
+                return false;
+            }
+        } else {
+            try {
+                localStorage.setItem(prefix + key, JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.error('Storage save error:', e);
+                return false;
             }
         }
     }
 
-    listProjects() {
-        if (!this.isElectron) return [];
-        try {
-            const files = fs.readdirSync(this.dataDir, { withFileTypes: true });
-            return files
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => dirent.name);
-        } catch (e) {
-            console.error('Failed to list projects:', e);
-            return [];
+    // 模式特定的加载方法
+    loadForMode(mode, key, defaultValue = null) {
+        const prefix = this.getModePrefix(mode);
+        if (this.isElectron) {
+            try {
+                const filePath = this.getFilePathForMode(mode, key);
+                if (fs.existsSync(filePath)) {
+                    const fileContent = fs.readFileSync(filePath, 'utf8');
+                    return JSON.parse(fileContent);
+                }
+                return defaultValue;
+            } catch (e) {
+                console.error(`File load error for ${key} in mode ${mode}:`, e);
+                return defaultValue;
+            }
+        } else {
+            try {
+                const item = localStorage.getItem(prefix + key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error('Storage load error:', e);
+                return defaultValue;
+            }
         }
     }
 
-    switchProject(projectName) {
-        const project = this.load('current_project', {});
-        project.name = projectName;
-        // We need to reload specific project settings if we switch
-        // For now, save this as the current project so getFilePath picks it up
-        this.save('current_project', project);
-        return true;
-    }
-
-    getFilePath(key) {
+    // 模式特定的文件路径
+    getFilePathForMode(mode, key) {
         // Sanitize key
         const safeKey = key.replace(/[^a-z0-9_-]/gi, '_');
 
@@ -55,98 +91,477 @@ class Storage {
         }
 
         // Project-specific keys go into a subfolder
-        const project = this.loadProject();
+        const project = this.loadProjectForMode(mode);
         const projectName = project.name || 'default';
         const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
 
-        // Metadata folder for state files
-        const metadataDir = path.join(this.dataDir, safeProjectName, 'metadata');
+        // Mode-specific folder mapping
+        const modeNames = {
+            'short-story': '短篇小说',
+            'medium-length': '中长篇小说',
+            'great-architect': '大神架构'
+        };
+        const modeFolderName = modeNames[mode] || mode;
 
-        if (this.isElectron && !fs.existsSync(metadataDir)) {
+        // Mode-specific subfolder
+        const metadataDir = path.join(this.dataDir, modeFolderName, safeProjectName, 'metadata');
+
+        return path.join(metadataDir, `${this.PREFIX}${safeKey}.json`);
+    }
+
+    // 模式特定的章节保存
+    saveChapterForMode(mode, chapterIndex, content, title = '') {
+        // 1. Save to the chapters.json (mode-specific)
+        let chapters = this.loadForMode(mode, 'chapters', {});
+        chapters[chapterIndex] = content;
+        this.saveForMode(mode, 'chapters', chapters);
+
+        // 2. Save as separate .txt file if in Electron
+        if (this.isElectron) {
             try {
-                fs.mkdirSync(metadataDir, { recursive: true });
+                const filePath = this.getChapterPathForMode(mode, chapterIndex, title);
+                const articlesDir = path.dirname(filePath);
+
+                if (!fs.existsSync(articlesDir)) {
+                    fs.mkdirSync(articlesDir, { recursive: true });
+                }
+
+                fs.writeFileSync(filePath, content, 'utf8');
+                console.log(`Chapter txt saved for mode ${mode}: ${filePath}`);
             } catch (e) {
-                console.error('Failed to create metadata directory:', e);
+                console.error('Failed to save chapter txt file:', e);
             }
         }
+    }
+
+    // 模式特定的章节路径
+    getChapterPathForMode(mode, chapterIndex, title) {
+        if (!this.isElectron) return null;
+        const project = this.loadProjectForMode(mode);
+        const projectName = project.name || 'default';
+        const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
+
+        const modeNames = {
+            'short-story': '短篇小说',
+            'medium-length': '中长篇小说',
+            'great-architect': '大神架构'
+        };
+        const modeFolderName = modeNames[mode] || mode;
+
+        const articlesDir = path.join(this.dataDir, modeFolderName, safeProjectName, 'articles');
+
+        const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
+        const fileName = `第${chapterIndex}章_${safeTitle}.txt`;
+        return path.join(articlesDir, fileName);
+    }
+
+    // 模式特定的卷管理方法
+    saveVolumeForMode(mode, volumeData) {
+        let volumes = this.loadForMode(mode, 'volumes', []);
+        if (volumeData.id) {
+            // 更新现有卷
+            const index = volumes.findIndex(v => v.id === volumeData.id);
+            if (index !== -1) {
+                volumes[index] = volumeData;
+            } else {
+                volumes.push(volumeData);
+            }
+        } else {
+            // 创建新卷
+            volumeData.id = volumes.length + 1;
+            volumeData.status = volumeData.status || 'planning';
+            volumes.push(volumeData);
+        }
+        this.saveForMode(mode, 'volumes', volumes);
+        return volumeData;
+    }
+
+    loadVolumesForMode(mode) {
+        return this.loadForMode(mode, 'volumes', []);
+    }
+
+    loadVolumeForMode(mode, volumeId) {
+        const volumes = this.loadVolumesForMode(mode);
+        return volumes.find(v => v.id === volumeId) || null;
+    }
+
+    deleteVolumeForMode(mode, volumeId) {
+        let volumes = this.loadVolumesForMode(mode);
+        volumes = volumes.filter(v => v.id !== volumeId);
+        this.saveForMode(mode, 'volumes', volumes);
+        return true;
+    }
+
+    saveVolumeSettingsForMode(mode, volumeId, settingsData) {
+        const volumeSettings = this.loadForMode(mode, 'volume_settings', {});
+        volumeSettings[volumeId] = settingsData;
+        this.saveForMode(mode, 'volume_settings', volumeSettings);
+        return true;
+    }
+
+    loadVolumeSettingsForMode(mode, volumeId) {
+        const volumeSettings = this.loadForMode(mode, 'volume_settings', {});
+        return volumeSettings[volumeId] || null;
+    }
+
+    deleteVolumeSettingsForMode(mode, volumeId) {
+        const volumeSettings = this.loadForMode(mode, 'volume_settings', {});
+        delete volumeSettings[volumeId];
+        this.saveForMode(mode, 'volume_settings', volumeSettings);
+        return true;
+    }
+
+    saveVolumeSettings(volumeId, settingsData) {
+        return this.saveVolumeSettingsForMode('medium-length', volumeId, settingsData);
+    }
+
+    loadVolumeSettings(volumeId) {
+        return this.loadVolumeSettingsForMode('medium-length', volumeId);
+    }
+
+    deleteVolumeSettings(volumeId) {
+        return this.deleteVolumeSettingsForMode('medium-length', volumeId);
+    }
+
+    // 模式特定的大纲管理
+    saveOutlineForMode(mode, outlines) {
+        return this.saveForMode(mode, 'outlines', outlines);
+    }
+
+    loadOutlinesForMode(mode) {
+        return this.loadForMode(mode, 'outlines', []);
+    }
+
+    // 模式特定的项目管理
+    saveProjectForMode(mode, projectData) {
+        if (this.isElectron && projectData.name) {
+            this.createProjectForMode(mode, projectData.name);
+        }
+        return this.saveForMode(mode, 'current_project', projectData);
+    }
+
+    loadProjectForMode(mode) {
+        return this.loadForMode(mode, 'current_project', { name: '' });
+    }
+
+    // 模式特定的章节删除
+    deleteChapterForMode(mode, chapterIndex, title = '') {
+        let chapters = this.loadForMode(mode, 'chapters', {});
+        if (chapters[chapterIndex]) {
+            delete chapters[chapterIndex];
+            this.saveForMode(mode, 'chapters', chapters);
+        }
+
+        if (this.isElectron) {
+            try {
+                const filePath = this.getChapterPathForMode(mode, chapterIndex, title);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    console.log(`Chapter txt deleted for mode ${mode}: ${filePath}`);
+                }
+            } catch (e) {
+                console.error('Failed to delete chapter txt file:', e);
+            }
+        }
+        return true;
+    }
+
+    loadChaptersForMode(mode) {
+        return this.loadForMode(mode, 'chapters', {});
+    }
+
+    // 模式特定的生成日志保存
+    saveGenLogForMode(mode, chapterIndex, content, title = '') {
+        if (!this.isElectron) return;
+        try {
+            const project = this.loadProjectForMode(mode);
+            const projectName = project.name || 'default';
+            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
+
+            const modeNames = {
+                'short-story': '短篇小说',
+                'medium-length': '中长篇小说',
+                'great-architect': '大神架构'
+            };
+            const modeFolderName = modeNames[mode] || mode;
+
+            const logsDir = path.join(this.dataDir, modeFolderName, safeProjectName, 'gen_logs');
+
+            if (!fs.existsSync(logsDir)) {
+                fs.mkdirSync(logsDir, { recursive: true });
+            }
+
+            const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
+            const fileName = `第${chapterIndex}章_FULL_RESPONSE_${new Date().getTime()}.txt`;
+            const filePath = path.join(logsDir, fileName);
+
+            fs.writeFileSync(filePath, content, 'utf8');
+            console.log(`Gen log saved for mode ${mode}: ${filePath}`);
+        } catch (e) {
+            console.error('Failed to save generation log:', e);
+        }
+    }
+
+    // 模式特定的提示词保存
+    savePromptForMode(mode, chapterIndex, prompt, title = '') {
+        if (!this.isElectron) return;
+        try {
+            const project = this.loadProjectForMode(mode);
+            const projectName = project.name || 'default';
+            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
+
+            const modeNames = {
+                'short-story': '短篇小说',
+                'medium-length': '中长篇小说',
+                'great-architect': '大神架构'
+            };
+            const modeFolderName = modeNames[mode] || mode;
+
+            const logsDir = path.join(this.dataDir, modeFolderName, safeProjectName, 'gen_logs');
+
+            if (!fs.existsSync(logsDir)) {
+                fs.mkdirSync(logsDir, { recursive: true });
+            }
+
+            const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
+            const fileName = `第${chapterIndex}章_PROMPT_${new Date().getTime()}.txt`;
+            const filePath = path.join(logsDir, fileName);
+
+            fs.writeFileSync(filePath, prompt, 'utf8');
+            console.log(`Prompt log saved for mode ${mode}: ${filePath}`);
+        } catch (e) {
+            console.error('Failed to save prompt log:', e);
+        }
+    }
+
+    // 模式特定的状态更新保存
+    saveStateUpdateForMode(mode, chapterIndex, jsonContent) {
+        if (!this.isElectron) return;
+
+        try {
+            const project = this.loadProjectForMode(mode);
+            const safeProjectName = (project.name || 'default').replace(/[\\/:*?"<>|]/g, '_');
+
+            const modeNames = {
+                'short-story': '短篇小说',
+                'medium-length': '中长篇小说',
+                'great-architect': '大神架构'
+            };
+            const modeFolderName = modeNames[mode] || mode;
+
+            const updatesDir = path.join(this.dataDir, modeFolderName, safeProjectName, 'state_updates');
+
+            if (!fs.existsSync(updatesDir)) {
+                fs.mkdirSync(updatesDir, { recursive: true });
+            }
+
+            const fileName = `第${chapterIndex}章_state.json`;
+            const filePath = path.join(updatesDir, fileName);
+
+            fs.writeFileSync(filePath, JSON.stringify(jsonContent, null, 2), 'utf8');
+            console.log(`State update saved for mode ${mode}: ${filePath}`);
+
+            if (jsonContent.state_updates && Array.isArray(jsonContent.state_updates)) {
+                let settings = this.loadSettingsForMode(mode);
+                let updated = false;
+
+                jsonContent.state_updates.forEach(update => {
+                    const key = update.key || (typeof update === 'object' ? Object.keys(update).find(k => k !== 'value') : null);
+                    const value = update.value || (key ? update[key] : null);
+
+                    if (!key || value === undefined) return;
+
+                    const existing = settings.characterState.find(s => s.key === key);
+                    if (existing) {
+                        existing.value = value;
+                        updated = true;
+                    } else {
+                        settings.characterState.push({ key, value });
+                        updated = true;
+                    }
+                });
+
+                if (updated) {
+                    this.saveSettingsForMode(mode, settings);
+                    window.dispatchEvent(new CustomEvent('settingsUpdated'));
+                }
+            }
+        } catch (e) {
+            console.error('Failed to save state update:', e);
+        }
+    }
+
+    // 模式特定的计划保存
+    savePlanForMode(mode, chapterIndex, plan, title = '') {
+        if (!this.isElectron || !plan) return;
+        try {
+            const project = this.loadProjectForMode(mode);
+            const projectName = project.name || 'default';
+            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
+
+            const modeNames = {
+                'short-story': '短篇小说',
+                'medium-length': '中长篇小说',
+                'great-architect': '大神架构'
+            };
+            const modeFolderName = modeNames[mode] || mode;
+
+            const logsDir = path.join(this.dataDir, modeFolderName, safeProjectName, 'gen_logs');
+
+            if (!fs.existsSync(logsDir)) {
+                fs.mkdirSync(logsDir, { recursive: true });
+            }
+
+            const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
+            const fileName = `第${chapterIndex}章_PLAN_${new Date().getTime()}.txt`;
+            const filePath = path.join(logsDir, fileName);
+
+            fs.writeFileSync(filePath, plan, 'utf8');
+            console.log(`Chapter plan saved for mode ${mode}: ${filePath}`);
+        } catch (e) {
+            console.error('Failed to save chapter plan:', e);
+        }
+    }
+
+    ensureDataDir() {
+        if (!fs.existsSync(this.dataDir)) {
+            try {
+                fs.mkdirSync(this.dataDir, { recursive: true });
+            } catch (e) {
+                console.error('Failed to create data directory:', e);
+            }
+        }
+
+        // 创建三个模式的文件夹
+        const modes = ['short-story', 'medium-length', 'great-architect'];
+        const modeNames = {
+            'short-story': '短篇小说',
+            'medium-length': '中长篇小说',
+            'great-architect': '大神架构'
+        };
+
+        modes.forEach(mode => {
+            const modeDir = path.join(this.dataDir, modeNames[mode]);
+            if (!fs.existsSync(modeDir)) {
+                try {
+                    fs.mkdirSync(modeDir, { recursive: true });
+                    console.log(`Created mode directory: ${modeNames[mode]}`);
+                } catch (e) {
+                    console.error(`Failed to create mode directory ${modeNames[mode]}:`, e);
+                }
+            }
+        });
+    }
+
+    listProjects(mode = 'short-story') {
+        if (!this.isElectron) return [];
+        try {
+            const modeNames = {
+                'short-story': '短篇小说',
+                'medium-length': '中长篇小说',
+                'great-architect': '大神架构'
+            };
+            const modeFolderName = modeNames[mode] || mode;
+            const modeDir = path.join(this.dataDir, modeFolderName);
+
+            if (!fs.existsSync(modeDir)) {
+                return [];
+            }
+
+            const files = fs.readdirSync(modeDir, { withFileTypes: true });
+            return files
+                .filter(dirent => dirent.isDirectory())
+                .map(dirent => dirent.name);
+        } catch (e) {
+            console.error('Failed to list projects:', e);
+            return [];
+        }
+    }
+
+    switchProject(projectName, mode = 'short-story') {
+        const project = this.loadProjectForMode(mode);
+        project.name = projectName;
+        this.saveProjectForMode(mode, project);
+        return true;
+    }
+
+    createProjectForMode(mode, projectName) {
+        if (!this.isElectron) return true;
+
+        try {
+            const modeNames = {
+                'short-story': '短篇小说',
+                'medium-length': '中长篇小说',
+                'great-architect': '大神架构'
+            };
+            const modeFolderName = modeNames[mode] || mode;
+            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
+            const projectDir = path.join(this.dataDir, modeFolderName, safeProjectName);
+
+            if (!fs.existsSync(projectDir)) {
+                fs.mkdirSync(projectDir, { recursive: true });
+                console.log(`Created project directory: ${projectDir}`);
+            }
+
+            return true;
+        } catch (e) {
+            console.error('Failed to create project directory:', e);
+            return false;
+        }
+    }
+
+    getFilePath(key) {
+        const safeKey = key.replace(/[^a-z0-9_-]/gi, '_');
+        const globalKeys = ['current_project', 'api_config'];
+        if (globalKeys.includes(key)) {
+            return path.join(this.dataDir, `${this.PREFIX}${safeKey}.json`);
+        }
+
+        const project = this.loadProjectForMode('short-story');
+        const projectName = project.name || 'default';
+        const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
+
+        const metadataDir = path.join(this.dataDir, safeProjectName, 'metadata');
 
         return path.join(metadataDir, `${this.PREFIX}${safeKey}.json`);
     }
 
     // Generic save
     save(key, data) {
-        if (this.isElectron) {
-            try {
-                const filePath = this.getFilePath(key);
-                fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-                return true;
-            } catch (e) {
-                console.error(`File save error for ${key}:`, e);
-                return false;
-            }
-        } else {
-            try {
-                localStorage.setItem(this.PREFIX + key, JSON.stringify(data));
-                return true;
-            } catch (e) {
-                console.error('Storage save error:', e);
-                return false;
-            }
-        }
+        console.error('save() method is deprecated, use saveForMode() instead');
+        return false;
     }
 
     // Generic load
     load(key, defaultValue = null) {
-        if (this.isElectron) {
-            try {
-                const filePath = this.getFilePath(key);
-                if (fs.existsSync(filePath)) {
-                    const fileContent = fs.readFileSync(filePath, 'utf8');
-                    return JSON.parse(fileContent);
-                }
-                return defaultValue;
-            } catch (e) {
-                console.error(`File load error for ${key}:`, e);
-                return defaultValue;
-            }
-        } else {
-            try {
-                const item = localStorage.getItem(this.PREFIX + key);
-                return item ? JSON.parse(item) : defaultValue;
-            } catch (e) {
-                console.error('Storage load error:', e);
-                return defaultValue;
-            }
-        }
+        console.error('load() method is deprecated, use loadForMode() instead');
+        return defaultValue;
     }
 
-    // Helper for projects
+    // Helper for projects (默认使用短篇模式)
     saveProject(projectData) {
-        // We'll store a list of project IDs and then individual project data
-        // For simplicity in this version, we might just have ONE active project
-        return this.save('current_project', projectData);
+        return this.saveProjectForMode('short-story', projectData);
     }
 
     loadProject() {
-        return this.load('current_project', {
-            name: '新建小说',
-            category: 'xuanhuan',
-            totalChapters: 100,
-            minWords: 2000,
-            maxWords: 4000,
-            authorRole: '',
-            rules: '',
-            sellingPoint: ''
-        });
+        return this.loadProjectForMode('short-story');
     }
 
-    // Helper for Settings
+    // Helper for Settings (按模式隔离)
     saveSettings(settings) {
-        return this.save('settings', settings);
+        return this.saveSettingsForMode('short-story', settings);
     }
 
     loadSettings() {
-        return this.load('settings', {
+        return this.loadSettingsForMode('short-story');
+    }
+
+    saveSettingsForMode(mode, settings) {
+        return this.saveForMode(mode, 'settings', settings);
+    }
+
+    loadSettingsForMode(mode) {
+        return this.loadForMode(mode, 'settings', {
             characterState: [],
             worldSettings: {},
             forbidden: []
@@ -155,11 +570,11 @@ class Storage {
 
     // Helper for API Config
     saveApiConfig(config) {
-        return this.save('api_config', config);
+        return this.saveForMode('global', 'api_config', config);
     }
 
     loadApiConfig() {
-        return this.load('api_config', {
+        return this.loadForMode('global', 'api_config', {
             activeId: 'deepseek',
             apis: {
                 'deepseek': {
@@ -238,191 +653,37 @@ class Storage {
         });
     }
 
-    // Helper for Chapters
+    // Helper for Chapters (默认使用短篇模式)
     saveChapter(chapterIndex, content, title = '') {
-        // 1. Save to the chapters.json (project-specific)
-        let chapters = this.load('chapters', {});
-        chapters[chapterIndex] = content;
-        this.save('chapters', chapters);
-
-        // 2. Save as separate .txt file if in Electron
-        if (this.isElectron) {
-            try {
-                const filePath = this.getChapterPath(chapterIndex, title);
-                const articlesDir = path.dirname(filePath);
-
-                if (!fs.existsSync(articlesDir)) {
-                    fs.mkdirSync(articlesDir, { recursive: true });
-                }
-
-                fs.writeFileSync(filePath, content, 'utf8');
-                console.log(`Chapter txt saved: ${filePath}`);
-            } catch (e) {
-                console.error('Failed to save chapter txt file:', e);
-            }
-        }
+        return this.saveChapterForMode('short-story', chapterIndex, content, title);
     }
 
     getChapterPath(chapterIndex, title) {
-        if (!this.isElectron) return null;
-        const project = this.loadProject();
-        const projectName = project.name || 'default';
-        const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
-        const articlesDir = path.join(this.dataDir, safeProjectName, 'articles');
-
-        const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
-        const fileName = `第${chapterIndex}章_${safeTitle}.txt`;
-        return path.join(articlesDir, fileName);
+        return this.getChapterPathForMode('short-story', chapterIndex, title);
     }
 
     deleteChapter(chapterIndex, title = '') {
-        // 1. Remove from JSON
-        let chapters = this.load('chapters', {});
-        if (chapters[chapterIndex]) {
-            delete chapters[chapterIndex];
-            this.save('chapters', chapters);
-        }
-
-        // 2. Delete .txt file
-        if (this.isElectron) {
-            try {
-                const filePath = this.getChapterPath(chapterIndex, title);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                    console.log(`Chapter txt deleted: ${filePath}`);
-                }
-            } catch (e) {
-                console.error('Failed to delete chapter txt file:', e);
-            }
-        }
-        return true;
+        return this.deleteChapterForMode('short-story', chapterIndex, title);
     }
 
     saveGenLog(chapterIndex, content, title = '') {
-        if (!this.isElectron) return;
-        try {
-            const project = this.loadProject();
-            const projectName = project.name || 'default';
-            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
-            const logsDir = path.join(this.dataDir, safeProjectName, 'gen_logs');
-
-            if (!fs.existsSync(logsDir)) {
-                fs.mkdirSync(logsDir, { recursive: true });
-            }
-
-            const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
-            const fileName = `第${chapterIndex}章_FULL_RESPONSE_${new Date().getTime()}.txt`;
-            const filePath = path.join(logsDir, fileName);
-
-            fs.writeFileSync(filePath, content, 'utf8');
-            console.log(`Gen log saved: ${filePath}`);
-        } catch (e) {
-            console.error('Failed to save generation log:', e);
-        }
+        return this.saveGenLogForMode('short-story', chapterIndex, content, title);
     }
 
     savePrompt(chapterIndex, prompt, title = '') {
-        if (!this.isElectron) return;
-        try {
-            const project = this.loadProject();
-            const projectName = project.name || 'default';
-            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
-            const logsDir = path.join(this.dataDir, safeProjectName, 'gen_logs');
-
-            if (!fs.existsSync(logsDir)) {
-                fs.mkdirSync(logsDir, { recursive: true });
-            }
-
-            const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
-            const fileName = `第${chapterIndex}章_PROMPT_${new Date().getTime()}.txt`;
-            const filePath = path.join(logsDir, fileName);
-
-            fs.writeFileSync(filePath, prompt, 'utf8');
-            console.log(`Prompt log saved: ${filePath}`);
-        } catch (e) {
-            console.error('Failed to save prompt log:', e);
-        }
+        return this.savePromptForMode('short-story', chapterIndex, prompt, title);
     }
 
     saveStateUpdate(chapterIndex, jsonContent) {
-        if (!this.isElectron) return;
-
-        try {
-            const project = this.loadProject();
-            const safeProjectName = (project.name || 'default').replace(/[\\/:*?"<>|]/g, '_');
-            const updatesDir = path.join(this.dataDir, safeProjectName, 'state_updates');
-
-            if (!fs.existsSync(updatesDir)) {
-                fs.mkdirSync(updatesDir, { recursive: true });
-            }
-
-            const fileName = `第${chapterIndex}章_state.json`;
-            const filePath = path.join(updatesDir, fileName);
-
-            fs.writeFileSync(filePath, JSON.stringify(jsonContent, null, 2), 'utf8');
-            console.log(`State update saved to: ${filePath}`);
-
-            // Also save a human-readable version of updates if needed?
-            // For now, the JSON is fine.
-
-            // Auto-sync logic
-            if (jsonContent.state_updates && Array.isArray(jsonContent.state_updates)) {
-                let settings = this.loadSettings();
-                let updated = false;
-
-                jsonContent.state_updates.forEach(update => {
-                    // Try to find key/value even if AI makes mistakes in JSON structure
-                    const key = update.key || (typeof update === 'object' ? Object.keys(update).find(k => k !== 'value') : null);
-                    const value = update.value || (key ? update[key] : null);
-
-                    if (!key || value === undefined) return;
-
-                    const existing = settings.characterState.find(s => s.key === key);
-                    if (existing) {
-                        existing.value = value;
-                        updated = true;
-                    } else {
-                        settings.characterState.push({ key, value });
-                        updated = true;
-                    }
-                });
-
-                if (updated) {
-                    this.saveSettings(settings);
-                    // Trigger UI refresh
-                    window.dispatchEvent(new CustomEvent('settingsUpdated'));
-                }
-            }
-        } catch (e) {
-            console.error('Failed to save state update:', e);
-        }
+        return this.saveStateUpdateForMode('short-story', chapterIndex, jsonContent);
     }
 
     savePlan(chapterIndex, plan, title = '') {
-        if (!this.isElectron || !plan) return;
-        try {
-            const project = this.loadProject();
-            const projectName = project.name || 'default';
-            const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
-            const logsDir = path.join(this.dataDir, safeProjectName, 'gen_logs');
-
-            if (!fs.existsSync(logsDir)) {
-                fs.mkdirSync(logsDir, { recursive: true });
-            }
-
-            const safeTitle = (title || `第${chapterIndex}章`).replace(/[\\/:*?"<>|]/g, '_');
-            const fileName = `第${chapterIndex}章_PLAN_${new Date().getTime()}.txt`;
-            const filePath = path.join(logsDir, fileName);
-
-            fs.writeFileSync(filePath, plan, 'utf8');
-            console.log(`Chapter plan saved: ${filePath}`);
-        } catch (e) {
-            console.error('Failed to save chapter plan:', e);
-        }
+        return this.savePlanForMode('short-story', chapterIndex, plan, title);
     }
 
     loadChapters() {
-        return this.load('chapters', {});
+        return this.loadForMode('short-story', 'chapters', {});
     }
 
     // 错误处理辅助方法
@@ -476,9 +737,9 @@ class Storage {
                 timestamp: new Date().toISOString(),
                 apiConfig: this.loadApiConfig(),
                 settings: this.loadSettings(),
-                project: this.loadProject(),
-                outlines: this.load('outlines', []),
-                chapters: this.load('chapters', {})
+                project: this.loadProjectForMode('short-story'),
+                outlines: this.loadOutlinesForMode('short-story'),
+                chapters: this.loadForMode('short-story', 'chapters', {})
             };
 
             const backupStr = JSON.stringify(backup, null, 2);
@@ -519,9 +780,9 @@ class Storage {
                     // 恢复数据
                     if (backup.apiConfig) this.saveApiConfig(backup.apiConfig);
                     if (backup.settings) this.saveSettings(backup.settings);
-                    if (backup.project) this.saveProject(backup.project);
-                    if (backup.outlines) this.save('outlines', backup.outlines);
-                    if (backup.chapters) this.save('chapters', backup.chapters);
+                    if (backup.project) this.saveProjectForMode('short-story', backup.project);
+                    if (backup.outlines) this.saveOutlineForMode('short-story', backup.outlines);
+                    if (backup.chapters) this.saveForMode('short-story', 'chapters', backup.chapters);
 
                     // 刷新UI
                     location.reload();
@@ -539,26 +800,130 @@ class Storage {
         }
     }
 
-    // 导出项目为TXT
-    exportProjectToTXT() {
+    // 卷级存储方法（默认模式）
+    saveVolume(volumeData) {
+        return this.saveVolumeForMode('medium-length', volumeData);
+    }
+
+    loadVolumes() {
+        return this.loadVolumesForMode('medium-length');
+    }
+
+    loadVolume(volumeId) {
+        return this.loadVolumeForMode('medium-length', volumeId);
+    }
+
+    deleteVolume(volumeId) {
+        return this.deleteVolumeForMode('medium-length', volumeId);
+    }
+
+    // 导出卷为TXT（默认模式）
+    exportVolumeToTXT(volumeId) {
+        return this.exportVolumeToTXTForMode('medium-length', volumeId);
+    }
+
+    // 模式特定的卷导出
+    exportVolumeToTXTForMode(mode, volumeId) {
         try {
-            const project = this.loadProject();
-            const outlines = this.load('outlines', []);
-            const chapters = this.load('chapters', {});
+            const project = this.loadProjectForMode(mode);
+            const volume = this.loadVolumeForMode(mode, volumeId);
+            const outlines = this.loadOutlinesForMode(mode);
+            const chapters = this.loadForMode(mode, 'chapters', {});
+
+            if (!volume) {
+                this.showError('卷不存在');
+                return;
+            }
+
+            let txtContent = `小说名称: ${project.name}\n`;
+            txtContent += `卷名: ${volume.title}\n`;
+            txtContent += `章节范围: 第${volume.startChapter}章 - 第${volume.endChapter}章\n`;
+            txtContent += `创建时间: ${new Date().toLocaleString()}\n\n`;
+            txtContent += `${volume.summary || '暂无概述'}\n\n`;
+
+            if (volume.chapters && volume.chapters.length > 0) {
+                volume.chapters.forEach(chapterNum => {
+                    const outlineIndex = chapterNum - 1;
+                    if (outlineIndex >= 0 && outlineIndex < outlines.length) {
+                        const outline = outlines[outlineIndex];
+                        const chapterContent = chapters[chapterNum] || '';
+                        txtContent += `\n第${chapterNum}章 ${outline.title}\n`;
+                        txtContent += '='.repeat(50) + '\n\n';
+                        txtContent += chapterContent + '\n';
+                    }
+                });
+            }
+
+            const blob = new Blob([txtContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${project.name}-第${volume.id}卷-${volume.title}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            this.showSuccess('卷导出成功！\n\n文件已下载到您的下载文件夹。');
+        } catch (e) {
+            console.error('导出失败:', e);
+            this.showError('导出失败: ' + e.message);
+        }
+    }
+
+    // 导出项目为TXT（默认模式）
+    exportProjectToTXT() {
+        return this.exportProjectToTXTForMode('short-story');
+    }
+
+    // 模式特定的项目导出
+    exportProjectToTXTForMode(mode) {
+        try {
+            const project = this.loadProjectForMode(mode);
+            const outlines = this.loadOutlinesForMode(mode);
+            const chapters = this.loadForMode(mode, 'chapters', {});
+            const volumes = this.loadVolumesForMode(mode);
 
             let txtContent = `小说名称: ${project.name}\n`;
             txtContent += `分类: ${project.category}\n`;
             txtContent += `总章节数: ${outlines.length}\n`;
+            if (volumes.length > 0) {
+                txtContent += `总卷数: ${volumes.length}\n`;
+            }
             txtContent += `创建时间: ${new Date().toLocaleString()}\n\n`;
 
-            for (let i = 0; i < outlines.length; i++) {
-                const chapterNum = i + 1;
-                const outline = outlines[i];
-                const chapterContent = chapters[chapterNum] || '';
+            // 如果有卷级结构，按卷导出
+            if (volumes.length > 0) {
+                volumes.forEach(volume => {
+                    txtContent += `\n${'='.repeat(60)}\n`;
+                    txtContent += `第${volume.id}卷：${volume.title}\n`;
+                    txtContent += `${'='.repeat(60)}\n\n`;
+                    txtContent += `${volume.summary || '暂无概述'}\n\n`;
+                    
+                    if (volume.chapters && volume.chapters.length > 0) {
+                        volume.chapters.forEach(chapterNum => {
+                            const outlineIndex = chapterNum - 1;
+                            if (outlineIndex >= 0 && outlineIndex < outlines.length) {
+                                const outline = outlines[outlineIndex];
+                                const chapterContent = chapters[chapterNum] || '';
+                                txtContent += `\n第${chapterNum}章 ${outline.title}\n`;
+                                txtContent += '='.repeat(50) + '\n\n';
+                                txtContent += chapterContent + '\n';
+                            }
+                        });
+                    }
+                });
+            } else {
+                // 按章节顺序导出
+                for (let i = 0; i < outlines.length; i++) {
+                    const chapterNum = i + 1;
+                    const outline = outlines[i];
+                    const chapterContent = chapters[chapterNum] || '';
 
-                txtContent += `\n第${chapterNum}章 ${outline.title}\n`;
-                txtContent += '='.repeat(50) + '\n\n';
-                txtContent += chapterContent + '\n';
+                    txtContent += `\n第${chapterNum}章 ${outline.title}\n`;
+                    txtContent += '='.repeat(50) + '\n\n';
+                    txtContent += chapterContent + '\n';
+                }
             }
 
             const blob = new Blob([txtContent], { type: 'text/plain' });
@@ -572,6 +937,55 @@ class Storage {
             URL.revokeObjectURL(url);
 
             this.showSuccess('项目导出成功！\n\n文件已下载到您的下载文件夹。');
+        } catch (e) {
+            console.error('导出失败:', e);
+            this.showError('导出失败: ' + e.message);
+        }
+    }
+
+    // 导出卷为TXT
+    exportVolumeToTXT(volumeId) {
+        try {
+            const project = this.loadProjectForMode('medium-length');
+            const volume = this.loadVolume(volumeId);
+            const outlines = this.loadOutlinesForMode('medium-length');
+            const chapters = this.loadForMode('medium-length', 'chapters', {});
+
+            if (!volume) {
+                this.showError('卷不存在');
+                return;
+            }
+
+            let txtContent = `小说名称: ${project.name}\n`;
+            txtContent += `卷名: ${volume.title}\n`;
+            txtContent += `章节范围: 第${volume.startChapter}章 - 第${volume.endChapter}章\n`;
+            txtContent += `创建时间: ${new Date().toLocaleString()}\n\n`;
+            txtContent += `${volume.summary || '暂无概述'}\n\n`;
+
+            if (volume.chapters && volume.chapters.length > 0) {
+                volume.chapters.forEach(chapterNum => {
+                    const outlineIndex = chapterNum - 1;
+                    if (outlineIndex >= 0 && outlineIndex < outlines.length) {
+                        const outline = outlines[outlineIndex];
+                        const chapterContent = chapters[chapterNum] || '';
+                        txtContent += `\n第${chapterNum}章 ${outline.title}\n`;
+                        txtContent += '='.repeat(50) + '\n\n';
+                        txtContent += chapterContent + '\n';
+                    }
+                });
+            }
+
+            const blob = new Blob([txtContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${project.name}-第${volume.id}卷-${volume.title}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            this.showSuccess('卷导出成功！\n\n文件已下载到您的下载文件夹。');
         } catch (e) {
             console.error('导出失败:', e);
             this.showError('导出失败: ' + e.message);

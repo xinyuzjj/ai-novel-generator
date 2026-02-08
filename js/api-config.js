@@ -1,6 +1,9 @@
 class ApiConfig {
     constructor() {
-        // 延迟初始化，等待DOM和依赖加载完成
+        this.autoSaveTimeout = null;
+        this.autoSaveDelay = 1000;
+        this.isSaving = false;
+        
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
@@ -23,6 +26,9 @@ class ApiConfig {
     bindEvents() {
         document.getElementById('btn-save-api').addEventListener('click', () => this.saveConfig());
 
+        // Auto-save on input changes
+        this.bindAutoSaveEvents();
+
         // Handle switch toggles (radio behavior)
         document.querySelectorAll('.api-item .switch input').forEach(input => {
             input.addEventListener('change', (e) => {
@@ -36,6 +42,9 @@ class ApiConfig {
                     document.querySelectorAll('.api-item').forEach(item => item.classList.remove('active'));
                     e.target.closest('.api-item').classList.add('active');
                 }
+                
+                // Auto-save on switch toggle
+                this.triggerAutoSave();
             });
         });
 
@@ -218,63 +227,24 @@ class ApiConfig {
     }
 
     saveConfig() {
-        let activeId = 'deepseek';
-        document.querySelectorAll('.api-item').forEach(item => {
-            if (item.querySelector('input[type="checkbox"]').checked) {
-                activeId = item.getAttribute('data-id');
-            }
-        });
-
-        const getApiData = (id, name) => {
-            const modelEl = document.getElementById(`api-model-${id}`);
-            const endEl = document.getElementById(`api-endpoint-${id}`);
+        // Use auto-save without indicator for manual save
+        this.autoSave(false);
+        // Show success message for manual save
+        const indicator = document.getElementById('auto-save-indicator');
+        if (!indicator) {
+            this.showAutoSaveIndicator();
+        }
+        const finalIndicator = document.getElementById('auto-save-indicator');
+        if (finalIndicator) {
+            finalIndicator.innerHTML = '<i class="fas fa-check-circle"></i> 配置已保存';
+            finalIndicator.style.background = 'linear-gradient(135deg, #10b981, #059669)';
             
-            let modelValue = '';
-            let customModel = '';
-            
-            if (id === 'local' && modelEl) {
-                if (modelEl.value === 'custom') {
-                    const customInput = document.getElementById('api-model-local-custom');
-                    modelValue = customInput ? customInput.value : '';
-                    customModel = modelValue;
-                } else {
-                    modelValue = modelEl.value;
-                }
-            } else if (modelEl) {
-                modelValue = modelEl.value;
-            }
-            
-            // 增加空值判断防止 HTML 缺失报错
-            return {
-                id: id,
-                name: name,
-                enabled: activeId === id,
-                model: modelValue,
-                customModel: customModel,
-                endpoint: endEl ? endEl.value : ''
-            };
-        };
-
-        const config = {
-            activeId: activeId,
-            apis: {
-                deepseek: getApiData('deepseek', 'DeepSeek-V3'),
-                'deepseek-r1': getApiData('deepseek-r1', 'DeepSeek-R1'),
-                openai: getApiData('openai', 'OpenAI GPT-4o'),
-                'openai-o1': getApiData('openai-o1', 'OpenAI o1'),
-                claude: getApiData('claude', 'Claude 3.5'),
-                moonshot: getApiData('moonshot', 'Kimi'),
-                zhipu: getApiData('zhipu', '智谱 GLM'),
-                qwen: getApiData('qwen', '通义千问'),
-                doubao: getApiData('doubao', '字节豆包'),
-                gemini: getApiData('gemini', 'Google Gemini'),
-                local: getApiData('local', 'Local (Ollama)'),
-                siliconflow: getApiData('siliconflow', '硅基流动')
-            }
-        };
-
-        if (storage.saveApiConfig(config)) {
-            alert('API配置已保存');
+            setTimeout(() => {
+                finalIndicator.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    finalIndicator.style.display = 'none';
+                }, 300);
+            }, 2000);
         }
     }
 
@@ -419,6 +389,170 @@ class ApiConfig {
                 errorMessage += error.message;
             }
             display.innerHTML = `<span class="text-muted">${errorMessage}</span>`;
+        }
+    }
+
+    bindAutoSaveEvents() {
+        // Bind auto-save to all input fields
+        const inputSelectors = [
+            '#page-api-config input[type="text"]',
+            '#page-api-config input[type="password"]',
+            '#page-api-config select'
+        ];
+
+        inputSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(input => {
+                input.addEventListener('input', () => this.triggerAutoSave());
+                input.addEventListener('change', () => this.triggerAutoSave());
+            });
+        });
+    }
+
+    triggerAutoSave() {
+        // Clear existing timeout
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+        }
+
+        // Set new timeout for auto-save
+        this.autoSaveTimeout = setTimeout(() => {
+            this.autoSave();
+        }, this.autoSaveDelay);
+    }
+
+    autoSave(showIndicator = true) {
+        if (this.isSaving) return;
+        
+        this.isSaving = true;
+        if (showIndicator) {
+            this.showAutoSaveIndicator();
+        }
+
+        // Perform save without alert
+        let activeId = 'deepseek';
+        document.querySelectorAll('.api-item').forEach(item => {
+            if (item.querySelector('input[type="checkbox"]').checked) {
+                activeId = item.getAttribute('data-id');
+            }
+        });
+
+        const getApiData = (id, name) => {
+            const modelEl = document.getElementById(`api-model-${id}`);
+            const endEl = document.getElementById(`api-endpoint-${id}`);
+            const keyEl = document.getElementById(`api-key-${id}`);
+            
+            let modelValue = '';
+            let customModel = '';
+            
+            if (id === 'local' && modelEl) {
+                if (modelEl.value === 'custom') {
+                    const customInput = document.getElementById('api-model-local-custom');
+                    modelValue = customInput ? customInput.value : '';
+                    customModel = modelValue;
+                } else {
+                    modelValue = modelEl.value;
+                }
+            } else if (modelEl) {
+                modelValue = modelEl.value;
+            }
+            
+            return {
+                id: id,
+                name: name,
+                enabled: activeId === id,
+                model: modelValue,
+                customModel: customModel,
+                endpoint: endEl ? endEl.value : '',
+                apiKey: keyEl ? keyEl.value : ''
+            };
+        };
+
+        const config = {
+            activeId: activeId,
+            apis: {
+                deepseek: getApiData('deepseek', 'DeepSeek-V3'),
+                'deepseek-r1': getApiData('deepseek-r1', 'DeepSeek-R1'),
+                openai: getApiData('openai', 'OpenAI GPT-4o'),
+                'openai-o1': getApiData('openai-o1', 'OpenAI o1'),
+                claude: getApiData('claude', 'Claude 3.5'),
+                moonshot: getApiData('moonshot', 'Kimi'),
+                zhipu: getApiData('zhipu', '智谱 GLM'),
+                qwen: getApiData('qwen', '通义千问'),
+                doubao: getApiData('doubao', '字节豆包'),
+                gemini: getApiData('gemini', 'Google Gemini'),
+                local: getApiData('local', 'Local (Ollama)'),
+                siliconflow: getApiData('siliconflow', '硅基流动')
+            }
+        };
+
+        if (storage.saveApiConfig(config)) {
+            if (showIndicator) {
+                this.showAutoSaveSuccess();
+            }
+        } else {
+            if (showIndicator) {
+                this.showAutoSaveError();
+            }
+        }
+
+        this.isSaving = false;
+    }
+
+    showAutoSaveIndicator() {
+        let indicator = document.getElementById('auto-save-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'auto-save-indicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, var(--accent-color), #7c3aed);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(98, 0, 234, 0.3);
+                z-index: 9999;
+                font-size: 14px;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                animation: slideInRight 0.3s ease;
+            `;
+            document.body.appendChild(indicator);
+        }
+        indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在保存...';
+        indicator.style.display = 'flex';
+    }
+
+    showAutoSaveSuccess() {
+        const indicator = document.getElementById('auto-save-indicator');
+        if (indicator) {
+            indicator.innerHTML = '<i class="fas fa-check-circle"></i> 已自动保存';
+            indicator.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            
+            setTimeout(() => {
+                indicator.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 300);
+            }, 2000);
+        }
+    }
+
+    showAutoSaveError() {
+        const indicator = document.getElementById('auto-save-indicator');
+        if (indicator) {
+            indicator.innerHTML = '<i class="fas fa-exclamation-circle"></i> 保存失败';
+            indicator.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            
+            setTimeout(() => {
+                indicator.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 300);
+            }, 2000);
         }
     }
 }

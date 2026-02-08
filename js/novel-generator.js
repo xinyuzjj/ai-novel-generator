@@ -46,12 +46,26 @@ class NovelGenerator {
                 this.loadChapter(index);
             }
         });
+
+        // 卷级相关事件
+        document.getElementById('btn-switch-to-volume')?.addEventListener('click', () => {
+            if (typeof app !== 'undefined') {
+                app.navigateTo('volume');
+            }
+        });
+
+        // 生成卷按钮
+        document.getElementById('btn-generate-volume')?.addEventListener('click', () => {
+            if (typeof volumeGenerator !== 'undefined') {
+                volumeGenerator.createVolume();
+            }
+        });
     }
 
     renderChapterList(query = '') {
         const container = document.getElementById('chapter-list');
-        const outlines = storage.load('outlines', []); // Outline as base structure
-        const chapters = storage.loadChapters(); // Actual content
+        const outlines = storage.loadOutlinesForMode('short-story');
+        const chapters = storage.loadChapters();
 
         if (outlines.length === 0) {
             container.innerHTML = '<div style="padding:10px; color:#666;">请先生成大纲</div>';
@@ -71,10 +85,15 @@ class NovelGenerator {
             const hasContent = chapters[idx] && chapters[idx].length > 0;
             const statusIcon = hasContent ? '<i class="fas fa-check-circle" style="color:var(--success-color)"></i>' : '<i class="far fa-circle"></i>';
 
+            // 检查章节所属的卷
+            const volume = chapterToVolume[idx];
+            const volumeInfo = volume ? `<span class="chapter-volume">第${volume.id}卷：${volume.title}</span>` : '';
+
             html += `
                 <div class="chapter-item" data-index="${idx}">
                     <div class="chapter-info">
                         ${statusIcon} 第${idx}章：${title}
+                        ${volumeInfo}
                     </div>
                     <div class="chapter-actions">
                         <button class="btn-icon-small btn-view" title="查看本地文件" style="display: ${hasContent ? 'flex' : 'none'}">
@@ -193,7 +212,7 @@ class NovelGenerator {
 
     async startGeneration() {
         const chapterIndex = document.getElementById('gen-chapter-index').value;
-        const outlines = storage.load('outlines', []);
+        const outlines = storage.loadOutlinesForMode('short-story');
 
         if (!storage.validateChapterIndex(chapterIndex)) {
             return;
@@ -206,9 +225,9 @@ class NovelGenerator {
             return;
         }
 
-        const currentOutline = outlines[index - 1]; // 0-based
-        const project = storage.loadProject();
-        const settings = storage.loadSettings();
+        const currentOutline = outlines[index - 1];
+        const project = storage.loadProjectForMode('short-story');
+        const settings = storage.loadSettingsForMode('short-story');
 
         // Control Flags
         const useState = document.getElementById('gen-use-state').checked;
@@ -304,7 +323,7 @@ ${additionalInstructions}
         const progressPercent = document.getElementById('progress-percent');
 
         // Save Prompt Log
-        storage.savePrompt(index, prompt, currentOutline.title);
+        storage.savePromptForMode('short-story', index, prompt, currentOutline.title);
 
         // Target words for progress estimation
         const targetWords = project.minWords || 2000;
@@ -339,16 +358,16 @@ ${additionalInstructions}
             const { cleanContent, stateUpdates, plan } = this.extractAndCleanStateUpdates(generatedText);
 
             // Save Response log
-            storage.saveGenLog(index, generatedText, currentOutline.title);
+            storage.saveGenLogForMode('short-story', index, generatedText, currentOutline.title);
 
             // Save extracted plan if any
             if (plan) {
-                storage.savePlan(index, plan, currentOutline.title);
+                storage.savePlanForMode('short-story', index, plan, currentOutline.title);
             }
 
             if (stateUpdates.length > 0) {
                 stateUpdates.forEach(update => {
-                    storage.saveStateUpdate(index, update);
+                    storage.saveStateUpdateForMode('short-story', index, update);
                 });
             }
 
@@ -467,7 +486,21 @@ ${additionalInstructions}
                 if (isLocal && response.status === 404) {
                     throw new Error('本地模型服务未运行，请确保Ollama已启动且端口正确。');
                 }
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                let errorMessage = `API Error: ${response.status}`;
+                if (response.status === 401) {
+                    errorMessage = 'API Key无效或过期，请重新配置API Key';
+                } else if (response.status === 402) {
+                    errorMessage = 'API配额不足或需要付费，请检查账户余额或升级套餐';
+                } else if (response.status === 403) {
+                    errorMessage = '访问被拒绝，请检查API Key是否正确或是否有权限访问该模型';
+                } else if (response.status === 404) {
+                    errorMessage = 'API端点不存在，请检查配置的API端点是否正确';
+                } else if (response.status === 429) {
+                    errorMessage = '请求过于频繁，请稍后重试';
+                } else if (response.status === 500 || response.status === 502 || response.status === 503) {
+                    errorMessage = '服务器错误，请稍后重试或联系API提供商';
+                }
+                throw new Error(errorMessage);
             }
 
             const reader = response.body.getReader();
@@ -506,7 +539,7 @@ ${additionalInstructions}
 
     openNovelFolder() {
         try {
-            const project = storage.loadProject();
+            const project = storage.loadProjectForMode('short-story');
             const projectName = project.name || 'default';
             const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
             const dataDir = path.join(process.cwd(), 'data', safeProjectName);
@@ -526,7 +559,7 @@ ${additionalInstructions}
         } catch (error) {
             console.error('打开小说文件夹失败:', error);
             try {
-                const project = storage.loadProject();
+                const project = storage.loadProjectForMode('short-story');
                 const projectName = project.name || 'default';
                 const safeProjectName = projectName.replace(/[\\/:*?"<>|]/g, '_');
                 const dataDir = path.join(process.cwd(), 'data', safeProjectName);

@@ -1,5 +1,6 @@
 class OutlineGenerator {
     constructor() {
+        this.currentMode = 'short-story';
         this.init();
     }
 
@@ -18,9 +19,9 @@ class OutlineGenerator {
 
         // Auto-save selling point to project
         document.getElementById('outline-summary').addEventListener('input', (e) => {
-            const project = storage.loadProject();
+            const project = storage.loadProjectForMode(this.currentMode);
             project.sellingPoint = e.target.value;
-            storage.saveProject(project);
+            storage.saveProjectForMode(this.currentMode, project);
         });
 
         // Search listener
@@ -57,10 +58,17 @@ class OutlineGenerator {
             // Debounce could be added here, but for now direct save is okay or just save on generate
             this.saveConfig();
         });
+
+        // 卷级大纲相关事件
+        document.getElementById('btn-switch-to-volume-outline')?.addEventListener('click', () => {
+            if (typeof app !== 'undefined') {
+                app.navigateTo('volume');
+            }
+        });
     }
 
     loadConfig() {
-        let config = storage.load('outline_config', null);
+        let config = storage.loadForMode(this.currentMode, 'outline_config', null);
 
         if (!config && typeof APP_TEMPLATES !== 'undefined' && APP_TEMPLATES.outline_system) {
             config = APP_TEMPLATES.outline_system.outline_components;
@@ -69,7 +77,7 @@ class OutlineGenerator {
         this.renderFieldList(config || []);
 
         // Also load the selling point into the textarea
-        const project = storage.loadProject();
+        const project = storage.loadProjectForMode(this.currentMode);
         if (project && project.sellingPoint) {
             const summaryEl = document.getElementById('outline-summary');
             if (summaryEl) {
@@ -88,7 +96,7 @@ class OutlineGenerator {
 
     saveConfig() {
         const fields = this.getFields();
-        storage.save('outline_config', fields);
+        storage.saveForMode(this.currentMode, 'outline_config', fields);
     }
 
     getFields() {
@@ -135,8 +143,8 @@ class OutlineGenerator {
         }
 
         // 验证章节数
-        if (isNaN(count) || count < 1 || count > 10) {
-            storage.showError('请输入有效的章节数（1-10）');
+        if (isNaN(count) || count < 1 || count > 100) {
+            storage.showError('请输入有效的章节数（1-100）');
             return;
         }
 
@@ -146,10 +154,10 @@ class OutlineGenerator {
         btn.disabled = true;
 
         try {
-            const project = storage.loadProject();
-            const fields = this.getFields(); // Use configured fields
-            const settings = storage.loadSettings();
-            const existingOutlines = storage.load('outlines', []);
+            const project = storage.loadProjectForMode('short-story');
+            const fields = this.getFields();
+            const settings = storage.loadSettingsForMode('short-story');
+            const existingOutlines = storage.loadOutlinesForMode('short-story');
 
             let systemRole = "你是一个专业的网文策划。";
             if (typeof APP_TEMPLATES !== 'undefined' && APP_TEMPLATES.outline_system) {
@@ -324,6 +332,8 @@ ${summary}
                 let errorMessage = `API Error: ${response.status}`;
                 if (response.status === 401) {
                     errorMessage = 'API Key无效或过期，请重新配置API Key';
+                } else if (response.status === 402) {
+                    errorMessage = 'API配额不足或需要付费，请检查账户余额或升级套餐';
                 } else if (response.status === 403) {
                     errorMessage = '访问被拒绝，请检查API Key是否正确或是否有权限访问该模型';
                 } else if (response.status === 404) {
@@ -376,9 +386,9 @@ ${summary}
     async brainstormSummary() {
         const btn = document.getElementById('btn-brainstorm-summary');
         const originalText = btn.innerHTML;
-        const project = storage.loadProject();
-        const settings = storage.loadSettings();
-        const existingOutlines = storage.load('outlines', []);
+        const project = storage.loadProjectForMode('short-story');
+        const settings = storage.loadSettingsForMode('short-story');
+        const existingOutlines = storage.loadOutlinesForMode('short-story');
 
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 思考中...';
         btn.disabled = true;
@@ -433,9 +443,9 @@ ${contextStr}
                 document.getElementById('outline-summary').value = summary;
 
                 // Sync to project storage immediately
-                const project = storage.loadProject();
+                const project = storage.loadProjectForMode(this.currentMode);
                 project.sellingPoint = summary;
-                storage.saveProject(project);
+                storage.saveProjectForMode(this.currentMode, project);
             }
         } catch (e) {
             console.error(e);
@@ -452,16 +462,16 @@ ${contextStr}
     }
 
     saveOutlines(newChapters) {
-        let outlines = storage.load('outlines', []);
+        let outlines = storage.loadOutlinesForMode(this.currentMode);
         newChapters.forEach(ch => {
             outlines.push(ch);
         });
-        storage.save('outlines', outlines);
+        storage.saveOutlinesForMode(this.currentMode, outlines);
     }
 
     renderOutlineList(query = '') {
         const container = document.getElementById('outline-list-container');
-        const outlines = storage.load('outlines', []);
+        const outlines = storage.loadOutlinesForMode(this.currentMode);
 
         if (outlines.length === 0) {
             container.innerHTML = '<div class="empty-state">暂无大纲，请点击生成</div>';
@@ -560,7 +570,7 @@ ${contextStr}
         const emotionText = emotionEl.innerText.trim();
 
         // Load, Update, Save
-        let outlines = storage.load('outlines', []);
+        let outlines = storage.loadOutlinesForMode(this.currentMode);
         if (outlines[index]) {
             outlines[index].title = titleText;
             outlines[index].plot = plotText;
@@ -569,7 +579,7 @@ ${contextStr}
             // Also update summary for backward compatibility and novelty generation logic
             outlines[index].summary = `${plotText}\n\n【冲突】\n${conflictText}\n\n【情感】\n${emotionText}`;
 
-            storage.save('outlines', outlines);
+            storage.saveOutlinesForMode(this.currentMode, outlines);
 
             // Visual Feedback
             card.classList.remove('modified');
@@ -583,24 +593,23 @@ ${contextStr}
                     }
                 }, 2000);
             }
-
-            // Sync with Novel Generator chapter list icon if needed
-            if (typeof novelGenerator !== 'undefined') {
-                novelGenerator.renderChapterList();
-            }
         }
     }
 
     jumpToWriting(chapterIndex) {
-        // Logic to switch page and select chapter
-        if (typeof app !== 'undefined') {
-            app.navigateTo('generate');
-            // Select the chapter
-            setTimeout(() => {
-                if (typeof novelGenerator !== 'undefined') {
-                    novelGenerator.loadChapter(chapterIndex);
-                }
-            }, 100);
+        if (this.currentMode === 'short-story') {
+            if (typeof app !== 'undefined') {
+                app.navigateTo('generate');
+                setTimeout(() => {
+                    if (typeof novelGenerator !== 'undefined') {
+                        novelGenerator.loadChapter(chapterIndex);
+                    }
+                }, 100);
+            }
+        } else if (this.currentMode === 'medium-length') {
+            if (typeof app !== 'undefined') {
+                app.navigateTo('volume-write');
+            }
         }
     }
 

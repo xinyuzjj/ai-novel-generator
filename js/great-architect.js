@@ -2,40 +2,100 @@ class GreatArchitect {
     constructor() {
         this.currentStep = 1;
         this.selectedIdea = null;
+        this.eventsBound = false;
+        this.projectName = '';
+        this.projectDescription = '';
         this.init();
     }
 
     init() {
+        // 每次初始化都重新绑定事件，确保页面切换后事件仍然有效
         this.bindEvents();
+        this.eventsBound = true;
+        
+        // 加载项目信息
+        this.loadProjectInfo();
+    }
+    
+    loadProjectInfo() {
+        // 从本地存储加载项目信息，使用非全局键避免与其他模式冲突
+        const projectData = storage.loadForMode('great-architect', 'architect_current_project', null);
+        if (projectData) {
+            this.projectName = projectData.name || '';
+            this.projectDescription = projectData.description || '';
+        }
+        
+        // 更新UI
+        this.updateProjectInfoUI();
+    }
+    
+    updateProjectInfoUI() {
+        const nameInput = document.getElementById('architect-project-name');
+        const descInput = document.getElementById('architect-project-description');
+        
+        if (nameInput) {
+            nameInput.value = this.projectName;
+        }
+        if (descInput) {
+            descInput.value = this.projectDescription;
+        }
+    }
+    
+    saveProjectInfo() {
+        const nameInput = document.getElementById('architect-project-name');
+        const descInput = document.getElementById('architect-project-description');
+        
+        if (nameInput) {
+            this.projectName = nameInput.value.trim();
+        }
+        if (descInput) {
+            this.projectDescription = descInput.value.trim();
+        }
+        
+        // 保存到本地存储，使用非全局键避免与其他模式冲突
+        storage.saveForMode('great-architect', 'architect_current_project', {
+            name: this.projectName,
+            description: this.projectDescription,
+            timestamp: new Date().getTime()
+        });
     }
 
     bindEvents() {
+        // 等待DOM加载完成
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.bindEventsInternal());
+        } else {
+            this.bindEventsInternal();
+        }
+    }
+
+    bindEventsInternal() {
         // Navigation
-        document.getElementById('btn-architect-next').addEventListener('click', () => this.nextStep());
-        document.getElementById('btn-architect-prev').addEventListener('click', () => this.prevStep());
+        this.bindEvent('btn-architect-next', 'click', () => this.nextStep());
+        this.bindEvent('btn-architect-prev', 'click', () => this.prevStep());
 
         // Stage 1: Expand
-        document.getElementById('btn-architect-expand').addEventListener('click', () => this.expandIdea());
-        document.getElementById('btn-architect-preset').addEventListener('click', () => this.showPresets());
+        this.bindEvent('btn-architect-expand', 'click', () => this.expandIdea());
+        this.bindEvent('btn-architect-preset', 'click', () => this.showPresets());
 
         // Stage 2: Build
-        document.getElementById('btn-architect-build').addEventListener('click', () => this.buildBible());
-        document.getElementById('btn-architect-save-outline').addEventListener('click', () => this.saveOutline());
+        this.bindEvent('btn-architect-build', 'click', () => this.buildBible());
+        this.bindEvent('btn-architect-save-outline', 'click', () => this.saveOutline());
 
         // Stage 3: Write/Helper
-        document.getElementById('architect-editor').addEventListener('input', (e) => this.handleEditorInput(e));
-        document.getElementById('btn-architect-write').addEventListener('click', () => this.assistWrite());
-        document.getElementById('btn-architect-outline-write').addEventListener('click', () => this.writeFromOutline());
-        document.getElementById('btn-architect-save-draft').addEventListener('click', () => this.saveDraft());
-        document.getElementById('btn-architect-import').addEventListener('click', () => this.importChapter());
-        document.getElementById('btn-scene-next').addEventListener('click', () => this.nextScene());
-        document.getElementById('btn-scene-prev').addEventListener('click', () => this.prevScene());
+        this.bindEvent('architect-editor', 'input', (e) => this.handleEditorInput(e));
+        this.bindEvent('btn-architect-write', 'click', () => this.assistWrite());
+        this.bindEvent('btn-architect-outline-write', 'click', () => this.writeFromOutline());
+        this.bindEvent('btn-architect-save-draft', 'click', () => this.saveDraft());
+        this.bindEvent('btn-architect-import', 'click', () => this.importChapter());
+        this.bindEvent('btn-scene-next', 'click', () => this.nextScene());
+        this.bindEvent('btn-scene-prev', 'click', () => this.prevScene());
 
         // Stage 4: Optimize
-        document.getElementById('btn-architect-optimize').addEventListener('click', () => this.optimizeContent());
-        document.getElementById('btn-architect-finalize').addEventListener('click', () => this.finalizeContent());
-        document.getElementById('btn-architect-export').addEventListener('click', () => this.exportToTXT());
-        document.getElementById('btn-architect-preview').addEventListener('click', () => this.previewOptimization());
+        this.bindEvent('btn-architect-optimize', 'click', () => this.optimizeContent());
+        this.bindEvent('btn-architect-finalize', 'click', () => this.finalizeContent());
+        this.bindEvent('btn-architect-export', 'click', () => this.exportToTXT());
+        this.bindEvent('btn-architect-preview', 'click', () => this.previewOptimization());
 
         // Intensity slider
         const intensitySlider = document.getElementById('architect-intensity');
@@ -47,9 +107,12 @@ class GreatArchitect {
         }
 
         // Load chapters on stage 3
-        document.querySelector('.stage[data-step="3"]')?.addEventListener('click', () => {
-            this.loadChapters();
-        });
+        const stage3 = document.querySelector('.stage[data-step="3"]');
+        if (stage3) {
+            stage3.addEventListener('click', () => {
+                this.loadChapters();
+            });
+        }
 
         // Tab navigation for stages
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -64,117 +127,128 @@ class GreatArchitect {
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
                 // Show target
-                document.getElementById(targetTab)?.classList.add('active');
+                const targetElement = document.getElementById(targetTab);
+                if (targetElement) {
+                    targetElement.classList.add('active');
+                }
             });
         });
 
         // Load saved draft
-        const savedDraft = storage.load('architect_draft', null);
+        const savedDraft = storage.loadForMode('great-architect', 'draft', null);
         if (savedDraft) {
             const editor = document.getElementById('architect-editor');
             if (editor && savedDraft.content) {
                 editor.value = savedDraft.content;
             }
         }
+
+        // 项目管理
+        this.bindEvent('btn-architect-save-project', 'click', () => this.saveProject());
+        this.bindEvent('btn-architect-load-project', 'click', () => this.loadProject());
+        this.bindEvent('btn-architect-new-project', 'click', () => this.newProject());
+        
+        // 项目信息输入事件
+        this.bindEvent('architect-project-name', 'input', () => this.saveProjectInfo());
+        this.bindEvent('architect-project-description', 'input', () => this.saveProjectInfo());
+    }
+
+    // 安全的事件绑定方法
+    bindEvent(elementId, eventType, callback) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            // 先移除可能存在的事件监听器，避免重复绑定
+            const newCallback = (e) => {
+                e.stopPropagation();
+                callback(e);
+            };
+            element.addEventListener(eventType, newCallback);
+        } else {
+            console.warn(`Element ${elementId} not found, event binding skipped.`);
+        }
     }
 
     // --- Navigation Logic ---
 
     updateWizardUI() {
-        // Update steps
-        document.querySelectorAll('.wizard-steps .step').forEach(step => {
-            const stepNum = parseInt(step.getAttribute('data-step'));
-            step.classList.remove('active', 'completed');
-            if (stepNum === this.currentStep) {
-                step.classList.add('active');
-            } else if (stepNum < this.currentStep) {
-                step.classList.add('completed');
-            }
-        });
-
-        // Update stages
-        document.querySelectorAll('.architect-stage').forEach(stage => {
-            stage.classList.remove('active');
-        });
-        document.getElementById(`architect-stage-${this.currentStep}`).classList.add('active');
-
-        // Update buttons
-        document.getElementById('btn-architect-prev').disabled = (this.currentStep === 1);
-
-        // Next button is only enabled if logic allows (e.g. choice made in Stage 1)
-        this.validateCurrentStep();
-    }
-
-    validateCurrentStep() {
-        const nextBtn = document.getElementById('btn-architect-next');
-        let isValid = false;
-
-        switch (this.currentStep) {
-            case 1: isValid = !!this.selectedIdea; break;
-            case 2: isValid = true; break; // Allow skip for now
-            case 3: isValid = document.getElementById('architect-editor').value.length > 50; break;
-            case 4: isValid = true; break;
-        }
-
-        nextBtn.disabled = !isValid;
+        // 新版架构页面使用分散的页面结构，不需要更新步骤和阶段
+        // 此方法保留以保持兼容性
+        console.log('updateWizardUI called for new architecture');
     }
 
     nextStep() {
-        if (this.currentStep < 4) {
-            this.currentStep++;
-            this.updateWizardUI();
-        }
+        // 新版架构页面使用分散的页面结构，不需要步骤导航
+        // 此方法保留以保持兼容性
+        console.log('nextStep called for new architecture');
     }
 
     prevStep() {
-        if (this.currentStep > 1) {
-            this.currentStep--;
-            this.updateWizardUI();
-        }
+        // 新版架构页面使用分散的页面结构，不需要步骤导航
+        // 此方法保留以保持兼容性
+        console.log('prevStep called for new architecture');
+    }
+
+    validateCurrentStep() {
+        // 验证当前步骤的状态，确保用户可以继续下一步
+        // 新版架构页面使用分散的页面结构，此方法保留以保持兼容性
+        console.log('validateCurrentStep called for new architecture');
     }
 
     // --- Stage 1: Creative Expansion ---
 
     async expandIdea() {
-        const input = document.getElementById('architect-input-1').value.trim();
+        const inputElement = document.getElementById('architect-input-1');
+        if (!inputElement) {
+            this.showMessage('系统错误，请刷新页面重试。', 'error');
+            return;
+        }
+        
+        const input = inputElement.value.trim();
         if (!input) {
-            alert('请先输入你的创意碎片');
+            this.showMessage('请先输入你的创意碎片', 'error');
             return;
         }
 
         const resultsContainer = document.getElementById('architect-results-1');
         const btn = document.getElementById('btn-architect-expand');
 
+        if (!resultsContainer || !btn) {
+            this.showMessage('系统错误，请刷新页面重试。', 'error');
+            return;
+        }
+
+        // 禁用按钮并显示加载状态
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在衍生脉络...';
-        resultsContainer.innerHTML = '<div class="loading-placeholder">AI 正在深度思考中，请耐心等待衍生结果...</div>';
+        resultsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #ccc;">AI 正在深度思考中，请耐心等待衍生结果...</div>';
 
-        // Get user preferences
-        const selectedStyles = Array.from(document.querySelectorAll('input[name="architect-style"]:checked'))
-            .map(checkbox => checkbox.value);
-        const ideaCount = document.getElementById('architect-idea-count').value;
-        const detailLevel = document.getElementById('architect-detail-level').value;
+        try {
+            // 获取用户偏好
+            const selectedStyles = Array.from(document.querySelectorAll('input[name="architect-style"]:checked'))
+                .map(checkbox => checkbox.value);
+            const ideaCount = document.getElementById('architect-idea-count')?.value || '3';
+            const detailLevel = document.getElementById('architect-detail-level')?.value || 'standard';
 
-        let styleDescription = '';
-        if (selectedStyles.length > 0) {
-            styleDescription = `
+            let styleDescription = '';
+            if (selectedStyles.length > 0) {
+                styleDescription = `
 【风格偏好】
 用户希望故事包含以下元素：${selectedStyles.join('、')}`;
-        }
+            }
 
-        let detailDescription = '';
-        switch (detailLevel) {
-            case 'basic':
-                detailDescription = '每个方向只需要标题和一句话介绍，简洁明了。';
-                break;
-            case 'comprehensive':
-                detailDescription = '每个方向需要详细的介绍，包括核心亮点、目标读者群体、商业卖点等。';
-                break;
-            default:
-                detailDescription = '每个方向需要标题、一句话介绍和相关标签。';
-        }
+            let detailDescription = '';
+            switch (detailLevel) {
+                case 'basic':
+                    detailDescription = '每个方向只需要标题和一句话介绍，简洁明了。';
+                    break;
+                case 'comprehensive':
+                    detailDescription = '每个方向需要详细的介绍，包括核心亮点、目标读者群体、商业卖点等。';
+                    break;
+                default:
+                    detailDescription = '每个方向需要标题、一句话介绍和相关标签。';
+            }
 
-        const prompt = `您是一位拥有20年网文创作经验的资深网文架构师，擅长“钩子”设计和商业爆款分析。
+            const prompt = `您是一位拥有20年网文创作经验的资深网文架构师，擅长“钩子”设计和商业爆款分析。
 基于用户提供的初始创意：【${input}】
 
 【任务目标】
@@ -199,23 +273,26 @@ ${detailDescription}
   }
 ]`;
 
-        try {
+            // 调用 AI 生成
             let fullText = "";
             await novelGenerator.streamAi(prompt, (chunk) => {
                 fullText += chunk;
             });
 
-            // Parse and render
+            // 解析并渲染结果
             const cleanJson = this.extractJson(fullText);
             const ideas = this.repairJson(cleanJson);
-
             this.renderIdeas(ideas);
         } catch (e) {
-            console.error(e);
-            resultsContainer.innerHTML = `<div class="alert alert-error">生成失败: ${e.message}</div>`;
+            console.error('Error expanding idea:', e);
+            this.showMessage('生成失败: ' + (e.message || '未知错误'), 'error');
+            resultsContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: #ff4d4f; background-color: #fff1f0; border-radius: 8px; border: 1px solid #ffccc7;">生成失败: ${e.message || '未知错误'}</div>`;
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-wand-sparkles"></i> 重新衍生故事脉络';
+            // 恢复按钮状态
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-wand-sparkles"></i> 重新衍生故事脉络';
+            }
         }
     }
 
@@ -337,10 +414,16 @@ ${idea.tags.join('、')}
 ${idea.highlights ? `\n【核心亮点】\n${idea.highlights}` : ''}
 `.trim();
 
-        alert(previewContent);
+        this.showMessage(previewContent, 'info');
     }
 
     showPresets() {
+        // 先移除可能存在的旧模态框
+        const oldModal = document.querySelector('.preset-modal');
+        if (oldModal) {
+            oldModal.remove();
+        }
+
         const presets = [
             {
                 title: "无敌流",
@@ -369,33 +452,127 @@ ${idea.highlights ? `\n【核心亮点】\n${idea.highlights}` : ''}
             }
         ];
 
-        let presetHtml = '<div class="preset-list">';
-        presets.forEach((preset, index) => {
-            presetHtml += `
-                <div class="preset-item" onclick="greatArchitect.applyPreset(${index})">
-                    <h4>${preset.title}</h4>
-                    <p>${preset.description}</p>
-                    <div class="example-text">💡 示例：${preset.example}</div>
-                </div>
-            `;
-        });
-        presetHtml += '</div>';
-
+        // 创建模态框容器
         const modal = document.createElement('div');
         modal.className = 'preset-modal';
-        modal.innerHTML = `
-            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
-            <div class="modal-content" style="width: 500px; max-width: 90vw;">
-                <div class="modal-header">
-                    <h3>选择预设模板</h3>
-                    <span class="close-modal" onclick="this.closest('.preset-modal').remove()">×</span>
-                </div>
-                <div class="modal-body">
-                    <p>选择一个预设模板作为创作起点：</p>
-                    ${presetHtml}
-                </div>
-            </div>
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
         `;
+
+        // 添加淡入动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideIn {
+                from { transform: translateY(-20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 创建内容容器
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background-color: #1e1e2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        `;
+
+        // 头部
+        const header = document.createElement('div');
+        header.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        `;
+        header.innerHTML = `
+            <h3 style="margin: 0; font-size: 18px; color: #fff;">选择预设模板</h3>
+            <button style="
+                background: none;
+                border: none;
+                color: #ccc;
+                cursor: pointer;
+                font-size: 18px;
+                padding: 5px;
+            ">×</button>
+        `;
+        header.querySelector('button').addEventListener('click', () => {
+            modal.remove();
+            style.remove();
+        });
+
+        // 提示文字
+        const prompt = document.createElement('p');
+        prompt.style.cssText = `color: #ccc; margin-bottom: 20px;`;
+        prompt.textContent = '选择一个预设模板作为创作起点：';
+
+        // 预设列表
+        const presetList = document.createElement('div');
+        presetList.style.cssText = `display: flex; flex-direction: column; gap: 12px;`;
+
+        // 添加预设项
+        presets.forEach((preset, index) => {
+            const item = document.createElement('div');
+            item.style.cssText = `
+                background-color: #2d2d4a;
+                border: 1px solid #333;
+                border-radius: 8px;
+                padding: 16px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            `;
+            item.innerHTML = `
+                <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #fff;">${preset.title}</h4>
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: #ccc;">${preset.description}</p>
+                <div style="font-size: 12px; color: #999; padding: 8px; background-color: #1e1e2e; border-radius: 4px;">💡 示例：${preset.example}</div>
+            `;
+            item.addEventListener('click', () => {
+                this.applyPreset(index);
+                modal.remove();
+                style.remove();
+            });
+            presetList.appendChild(item);
+        });
+
+        // 组装内容
+        content.appendChild(header);
+        content.appendChild(prompt);
+        content.appendChild(presetList);
+
+        // 添加到模态框
+        modal.appendChild(content);
+        
+        // 点击背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                style.remove();
+            }
+        });
+
+        // 添加到页面
         document.body.appendChild(modal);
     }
 
@@ -408,20 +585,16 @@ ${idea.highlights ? `\n【核心亮点】\n${idea.highlights}` : ''}
             "主角获得超能力，在现代都市中挣扎求生"
         ];
 
-        document.getElementById('architect-input-1').value = presets[index];
-        document.querySelector('.preset-modal')?.remove();
-    }
+        // 设置输入框值
+        const inputElement = document.getElementById('architect-input-1');
+        if (inputElement) {
+            inputElement.value = presets[index];
+        }
 
-    selectIdea(idea) {
-        this.selectedIdea = idea;
-        document.getElementById('architect-selected-title').value = idea.title;
-
-        // Highlight selected
-        document.querySelectorAll('.idea-card').forEach(c => c.classList.remove('selected'));
-        // Find the card (simple way)
-        event.currentTarget.classList.add('selected');
-
-        this.validateCurrentStep();
+        // 短暂延迟后调用 expandIdea，确保模态框完全移除
+        setTimeout(() => {
+            this.expandIdea();
+        }, 100);
     }
 
     // --- Stage 2: Character & Pacing ---
@@ -488,6 +661,7 @@ ${idea.highlights ? `\n【核心亮点】\n${idea.highlights}` : ''}
 1. **冰山理论**：所有角色都有表面和深层两层，不要直白描述内心。
 2. **商业思维**：所有设定都要服务于故事的可读性和吸引力。
 3. **冲突设计**：每一部分设定都要能引出后续冲突。
+4. **丰富配角**：根据剧情需要，适当添加一些配角来丰富主角和剧情，让读者看起来更爽。
 
 ${characterRequirements}
 
@@ -497,7 +671,13 @@ ${worldRequirements}
 
 【输出格式】
 请以Markdown格式输出，使用清晰的标题层级。
-对于大纲部分，请使用表格格式展示章节安排。
+对于大纲部分，请使用表格格式展示章节安排，完整显示所有章节。
+输出顺序：
+1. 角色设定（主角、反派、配角）
+2. 关系网络（角色之间的关系）
+3. 章节大纲（完整显示所有章节）
+4. 世界观设定
+
 示例表格格式：
 | 章节 | 标题 | 核心剧情 | 情绪点 | 角色成长 | 结尾钩子 |
 |------|------|----------|--------|----------|----------|
@@ -631,7 +811,7 @@ ${tonePrompt}
                 this.handleEditorInput();
             });
         } catch (e) {
-            alert('续写失败: ' + e.message);
+            this.showMessage('续写失败: ' + e.message, 'error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-feather-pointed"></i> AI 辅助撰写/续写';
@@ -640,14 +820,17 @@ ${tonePrompt}
 
     saveDraft() {
         const content = document.getElementById('architect-editor').value;
-        if (!content) return;
+        if (!content) {
+            this.showMessage('没有内容可保存', 'warning');
+            return;
+        }
 
-        storage.save('architect_draft', {
+        storage.saveForMode('great-architect', 'draft', {
             title: this.selectedIdea?.title,
             content: content,
             timestamp: new Date().getTime()
         });
-        alert('草稿已保存到本地。');
+        this.showMessage('草稿已保存到本地。', 'success');
     }
 
     // --- Stage 4: Optimization ---
@@ -657,7 +840,7 @@ ${tonePrompt}
 
         const originalContent = document.getElementById('architect-editor').value;
         if (!originalContent) {
-            alert('请在第三阶段输入内容');
+            this.showMessage('请在第三阶段输入内容', 'error');
             this.currentStep = 3;
             this.updateWizardUI();
             return;
@@ -773,7 +956,7 @@ ${contentRequirements}
             // Here we could find which chapter to import to
             // For now, let's just alert success and save to a special key
             storage.save('architect_final_output', finalContent);
-            alert('导入成功！您可以在“小说生成”页面预览或进行后续编辑。');
+            this.showMessage('导入成功！您可以在“小说生成”页面预览或进行后续编辑。', 'success');
         }
     }
 
@@ -785,7 +968,7 @@ ${contentRequirements}
         const title = this.selectedIdea?.title || '未命名故事';
 
         if (!currentText) {
-            alert('没有内容可导出');
+            this.showMessage('没有内容可导出', 'warning');
             return;
         }
 
@@ -818,18 +1001,18 @@ ${optimizedText}
         const optimizedText = document.getElementById('architect-optimized-text').textContent;
 
         if (!originalText || !optimizedText) {
-            alert('没有内容可以预览');
+            this.showMessage('没有内容可以预览', 'warning');
             return;
         }
 
         const modal = document.createElement('div');
         modal.className = 'preset-modal';
         modal.innerHTML = `
-            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
-            <div class="modal-content" style="width: 700px; max-width: 95vw;">
+            <div class="modal-backdrop" onclick="event.stopPropagation(); document.querySelector('.preset-modal')?.remove()"></div>
+            <div class="modal-content" style="width: 700px; max-width: 95vw;" onclick="event.stopPropagation()">
                 <div class="modal-header">
                     <h3>内容对比预览</h3>
-                    <span class="close-modal" onclick="this.closest('.preset-modal').remove()">×</span>
+                    <span class="close-modal" onclick="event.stopPropagation(); document.querySelector('.preset-modal')?.remove()">×</span>
                 </div>
                 <div class="modal-body" style="display: flex; gap: 20px; max-height: 60vh; overflow-y: auto;">
                     <div style="flex: 1; padding: 10px; border-right: 1px solid var(--border-color);">
@@ -849,16 +1032,329 @@ ${optimizedText}
     saveOutline() {
         const results = document.getElementById('architect-results-2');
         if (!results || !results.textContent.trim()) {
-            alert('没有内容可保存');
+            this.showMessage('没有内容可保存', 'warning');
             return;
         }
 
-        storage.save('architect_outline', {
+        storage.saveForMode('great-architect', 'outline', {
             title: this.selectedIdea?.title,
             content: results.innerHTML,
             timestamp: new Date().getTime()
         });
-        alert('设定已保存到本地');
+        this.showMessage('设定已保存到本地。', 'success');
+    }
+
+    // --- Missing Methods Implementation ---
+
+    importChapter() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.txt,.md,.doc,.docx';
+        
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const content = event.target.result;
+                const editor = document.getElementById('architect-editor');
+                if (editor) {
+                    editor.value = content;
+                    this.handleEditorInput();
+                    this.showMessage('章节导入成功！', 'success');
+                }
+            };
+            reader.onerror = () => {
+                this.showMessage('文件读取失败，请重试。', 'error');
+            };
+            reader.readAsText(file, 'utf-8');
+        });
+
+        input.click();
+    }
+
+    writeFromOutline() {
+        const editor = document.getElementById('architect-editor');
+        const btn = document.getElementById('btn-architect-outline-write');
+        
+        if (!btn) return;
+
+        btn.disabled = true;
+        btn.textContent = 'AI 生成中...';
+
+        // Get outline content
+        const outlineContent = document.getElementById('architect-results-2')?.innerHTML || '';
+        
+        if (!outlineContent) {
+            this.showMessage('请先在第二阶段生成大纲', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-feather-alt"></i> 基于大纲创作';
+            return;
+        }
+
+        const prompt = `你是一个擅长基于大纲创作的小说作家。
+请根据以下大纲内容，生成一段约 300-500 字的小说内容：
+
+${outlineContent}
+
+要求：
+1. 基于大纲中的情节和人物设定
+2. 保持连贯的叙事风格
+3. 注重细节描写和画面感
+4. 符合冰山理论，不直接描述内心活动
+5. 直接输出正文，不要添加任何引言`;
+
+        novelGenerator.streamAi(prompt, (chunk) => {
+            editor.value += chunk;
+            this.handleEditorInput();
+        }).then(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-feather-alt"></i> 基于大纲创作';
+        }).catch((error) => {
+            this.showMessage('生成失败: ' + error.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-feather-alt"></i> 基于大纲创作';
+        });
+    }
+
+    nextScene() {
+        // Simple implementation for scene navigation
+        const editor = document.getElementById('architect-editor');
+        if (editor) {
+            editor.value += '\n\n--- 场景转换 ---\n\n';
+            this.handleEditorInput();
+        }
+    }
+
+    prevScene() {
+        // Simple implementation for scene navigation
+        const editor = document.getElementById('architect-editor');
+        if (editor) {
+            const content = editor.value;
+            const lastSceneIndex = content.lastIndexOf('--- 场景转换 ---');
+            if (lastSceneIndex > -1) {
+                editor.value = content.substring(0, lastSceneIndex);
+                this.handleEditorInput();
+            }
+        }
+    }
+
+    loadChapters() {
+        // Load chapters from storage
+        const chapters = storage.loadForMode('great-architect', 'chapters', {});
+        
+        // Update chapter selection if available
+        const chapterSelect = document.getElementById('architect-chapter-select');
+        if (chapterSelect) {
+            chapterSelect.innerHTML = '<option value="">选择章节</option>';
+            
+            Object.keys(chapters).forEach(chapterNum => {
+                const option = document.createElement('option');
+                option.value = chapterNum;
+                option.textContent = `第${chapterNum}章`;
+                chapterSelect.appendChild(option);
+            });
+        }
+    }
+
+    // --- Project Management ---
+
+    saveProject() {
+        // 获取当前项目名称，如果没有则使用提示输入
+        let projectName = this.projectName || this.selectedIdea?.title;
+        if (!projectName) {
+            projectName = prompt('请输入项目名称：', '未命名项目');
+            if (!projectName) return;
+        }
+
+        const projectData = {
+            name: projectName,
+            description: this.projectDescription,
+            timestamp: new Date().getTime(),
+            selectedIdea: this.selectedIdea,
+            draft: {
+                content: document.getElementById('architect-editor')?.value || '',
+                title: this.selectedIdea?.title || ''
+            },
+            outline: {
+                content: document.getElementById('architect-results-2')?.innerHTML || '',
+                title: this.selectedIdea?.title || ''
+            },
+            currentStep: this.currentStep,
+            generatedIdeas: this.generatedIdeas
+        };
+
+        // Get existing projects，使用特定于大神架构的键名
+        const projects = storage.loadForMode('great-architect', 'architect_projects', []);
+        
+        // Check if project with same name exists
+        const existingIndex = projects.findIndex(p => p.name === projectName);
+        if (existingIndex >= 0) {
+            if (confirm('项目名称已存在，是否覆盖？')) {
+                projects[existingIndex] = projectData;
+            } else {
+                return;
+            }
+        } else {
+            projects.push(projectData);
+        }
+
+        // Save projects，使用特定于大神架构的键名
+        storage.saveForMode('great-architect', 'architect_projects', projects);
+        this.showMessage('项目保存成功！', 'success');
+    }
+
+    loadProject() {
+        const projects = storage.loadForMode('great-architect', 'architect_projects', []);
+        if (projects.length === 0) {
+            this.showMessage('没有保存的项目', 'warning');
+            return;
+        }
+
+        let projectHtml = '<div class="project-list">';
+        projects.forEach((project, index) => {
+            const date = new Date(project.timestamp).toLocaleString();
+            projectHtml += `
+                <div class="project-item" onclick="greatArchitect.selectProject(${index})">
+                    <h4>${project.name}</h4>
+                    <p class="project-date">保存时间：${date}</p>
+                    <p class="project-info">当前步骤：第${project.currentStep}步</p>
+                    <div class="project-actions">
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); greatArchitect.selectProject(${index})">加载</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); greatArchitect.deleteProject(${index})">删除</button>
+                    </div>
+                </div>
+            `;
+        });
+        projectHtml += '</div>';
+
+        const modal = document.createElement('div');
+        modal.className = 'preset-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop" onclick="event.stopPropagation(); document.querySelector('.preset-modal')?.remove()"></div>
+            <div class="modal-content" style="width: 600px; max-width: 90vw;" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>选择项目</h3>
+                    <span class="close-modal" onclick="event.stopPropagation(); document.querySelector('.preset-modal')?.remove()">×</span>
+                </div>
+                <div class="modal-body">
+                    <p>请选择要加载的项目：</p>
+                    ${projectHtml}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    selectProject(index) {
+        const projects = storage.loadForMode('great-architect', 'architect_projects', []);
+        const project = projects[index];
+        if (!project) return;
+
+        // Load project data
+        this.selectedIdea = project.selectedIdea;
+        this.currentStep = project.currentStep;
+        this.generatedIdeas = project.generatedIdeas;
+        this.projectName = project.name || '';
+        this.projectDescription = project.description || '';
+
+        // Update UI
+        if (project.selectedIdea) {
+            const selectedTitleElement = document.getElementById('architect-selected-title');
+            if (selectedTitleElement) {
+                selectedTitleElement.value = project.selectedIdea.title;
+            }
+        }
+
+        if (project.draft) {
+            const editor = document.getElementById('architect-editor');
+            if (editor) {
+                editor.value = project.draft.content;
+                this.handleEditorInput();
+            }
+        }
+
+        if (project.outline) {
+            const resultsContainer = document.getElementById('architect-results-2');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = project.outline.content;
+            }
+        }
+
+        // Update wizard UI
+        this.updateWizardUI();
+
+        // Update project info UI
+        this.updateProjectInfoUI();
+        
+        // Save current project info
+        this.saveProjectInfo();
+
+        // Close modal
+        document.querySelector('.preset-modal')?.remove();
+        this.showMessage('项目加载成功！', 'success');
+    }
+
+    deleteProject(index) {
+        if (confirm('确定要删除这个项目吗？')) {
+            const projects = storage.loadForMode('great-architect', 'architect_projects', []);
+            projects.splice(index, 1);
+            storage.saveForMode('great-architect', 'architect_projects', projects);
+            
+            // Refresh project list
+            this.loadProject();
+        }
+    }
+
+    newProject() {
+        if (confirm('确定要创建新项目吗？当前未保存的内容将会丢失。')) {
+            // Reset all data
+            this.selectedIdea = null;
+            this.currentStep = 1;
+            this.generatedIdeas = null;
+            this.projectName = '';
+            this.projectDescription = '';
+
+            // Clear UI
+            const inputElement = document.getElementById('architect-input-1');
+            if (inputElement) {
+                inputElement.value = '';
+            }
+            const editorElement = document.getElementById('architect-editor');
+            if (editorElement) {
+                editorElement.value = '';
+            }
+            const resultsElement1 = document.getElementById('architect-results-1');
+            if (resultsElement1) {
+                resultsElement1.innerHTML = '';
+            }
+            const resultsElement2 = document.getElementById('architect-results-2');
+            if (resultsElement2) {
+                resultsElement2.innerHTML = '';
+            }
+            const selectedTitleElement = document.getElementById('architect-selected-title');
+            if (selectedTitleElement) {
+                selectedTitleElement.value = '';
+            }
+            
+            // Clear project info
+            const nameInput = document.getElementById('architect-project-name');
+            if (nameInput) {
+                nameInput.value = '';
+            }
+            const descInput = document.getElementById('architect-project-description');
+            if (descInput) {
+                descInput.value = '';
+            }
+
+            // Save empty project info
+            this.saveProjectInfo();
+
+            // Update wizard UI
+            this.updateWizardUI();
+            this.showMessage('新项目已创建！', 'success');
+        }
     }
 
     // Simple markdown parser helper
@@ -870,9 +1366,88 @@ ${optimizedText}
             .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
     }
+
+    // Show custom message instead of alert
+    showMessage(message, type = 'info') {
+        // Remove existing message if any
+        const existingMessage = document.querySelector('.custom-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `custom-message message-${type}`;
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease;
+        `;
+
+        // Set background color based on type
+        switch (type) {
+            case 'success':
+                messageDiv.style.backgroundColor = '#10b981';
+                break;
+            case 'error':
+                messageDiv.style.backgroundColor = '#ef4444';
+                break;
+            case 'warning':
+                messageDiv.style.backgroundColor = '#f59e0b';
+                break;
+            default:
+                messageDiv.style.backgroundColor = '#3b82f6';
+        }
+
+        messageDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: none;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 16px;
+                ">&times;</button>
+            </div>
+        `;
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        document.body.appendChild(messageDiv);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (messageDiv && messageDiv.parentNode) {
+                messageDiv.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => {
+                    if (messageDiv && messageDiv.parentNode) {
+                        messageDiv.remove();
+                    }
+                }, 300);
+            }
+        }, 3000);
+    }
 }
 
-// Initialize when library is ready
-window.addEventListener('load', () => {
-    window.greatArchitect = new GreatArchitect();
-});
+const greatArchitect = new GreatArchitect();

@@ -30,40 +30,129 @@
         <div class="main-content">
             <!-- Sidebar -->
             <div class="sidebar">
-                <div class="menu-item active" data-page="home">
-                    <i class="fas fa-home"></i>
-                    <span>首页</span>
-                </div>
-                <div class="menu-item" data-page="prompt">
-                    <i class="fas fa-pen-fancy"></i>
-                    <span>创建题材</span>
-                </div>
-                <div class="menu-item" data-page="settings">
-                    <i class="fas fa-cogs"></i>
-                    <span>小说设定</span>
-                </div>
-                <div class="menu-item" data-page="outline">
-                    <i class="fas fa-list-alt"></i>
-                    <span>章节大纲</span>
-                </div>
-                <div class="menu-item" data-page="generate">
-                    <i class="fas fa-magic"></i>
-                    <span>小说生成</span>
-                </div>
-                <div class="menu-item" data-page="architect">
-                    <i class="fas fa-crown"></i>
-                    <span>大神架构</span>
-                    <span class="badge-new">NEW</span>
+                <!-- 创作模式选择 -->
+                <div class="sidebar-section">
+                    <h3>创作模式</h3>
+                    <div class="mode-selector">
+                        <div class="mode-item active" data-mode="short-story">
+                            <i class="fas fa-feather-alt"></i>
+                            <span>短篇网文</span>
+                            <small>传统功能</small>
+                        </div>
+                        <div class="mode-item" data-mode="medium-length">
+                            <i class="fas fa-book"></i>
+                            <span>中长网文</span>
+                            <small>卷管理</small>
+                        </div>
+                        <div class="mode-item" data-mode="great-architect">
+                            <i class="fas fa-crown"></i>
+                            <span>大神架构</span>
+                            <small>引导式创作</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="menu-divider"></div>
-                <div class="menu-item" data-page="api-config">
-                    <i class="fas fa-key"></i>
-                    <span>模型API</span>
+                
+                <!-- 短篇网文菜单 -->
+                <div class="sidebar-section mode-content" data-for-mode="short-story">
+                    <h4>短篇网文</h4>
+                    <div class="menu-item active" data-page="home">
+                        <i class="fas fa-home"></i>
+                        <span>首页</span>
+                    </div>
+                    <div class="menu-item" data-page="prompt">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>创建题材</span>
+                    </div>
+                    <div class="menu-item" data-page="settings">
+                        <i class="fas fa-cogs"></i>
+                        <span>小说设定</span>
+                    </div>
+                    <div class="menu-item" data-page="outline">
+                        <i class="fas fa-list-alt"></i>
+                        <span>章节大纲</span>
+                    </div>
+                    <div class="menu-item" data-page="generate">
+                        <i class="fas fa-magic"></i>
+                        <span>小说生成</span>
+                    </div>
                 </div>
+                
+                <!-- 中长网文菜单 -->
+                <div class="sidebar-section mode-content" data-for-mode="medium-length" style="display: none;">
+                    <h4>中长网文</h4>
+                    <div class="menu-item" data-page="volume-home">
+                        <i class="fas fa-home"></i>
+                        <span>卷管理首页</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-create">
+                        <i class="fas fa-plus"></i>
+                        <span>创建卷</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-settings">
+                        <i class="fas fa-cogs"></i>
+                        <span>卷级别设定</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-list">
+                        <i class="fas fa-list"></i>
+                        <span>卷列表</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-outline">
+                        <i class="fas fa-map"></i>
+                        <span>卷大纲</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-characters">
+                        <i class="fas fa-users"></i>
+                        <span>卷人物关系</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-generate">
+                        <i class="fas fa-magic"></i>
+                        <span>卷生成</span>
+                    </div>
+                    <div class="menu-item" data-page="volume-content">
+                        <i class="fas fa-book-open"></i>
+                        <span>卷内容</span>
+                    </div>
+                </div>
+                
+                <!-- 大神架构菜单 -->
+                <div class="sidebar-section mode-content" data-for-mode="great-architect" style="display: none;">
+                    <h4>大神架构</h4>
+                    <div class="menu-item" data-page="architect-home">
+                        <i class="fas fa-home"></i>
+                        <span>架构首页</span>
+                    </div>
+                    <div class="menu-item" data-page="architect-expand">
+                        <i class="fas fa-wand-sparkles"></i>
+                        <span>创意扩展</span>
+                    </div>
+                    <div class="menu-item" data-page="architect-build">
+                        <i class="fas fa-cubes"></i>
+                        <span>深度构建</span>
+                    </div>
+                    <div class="menu-item" data-page="architect-write">
+                        <i class="fas fa-feather"></i>
+                        <span>切片撰写</span>
+                    </div>
+                    <div class="menu-item" data-page="architect-optimize">
+                        <i class="fas fa-sparkles"></i>
+                        <span>人性优化</span>
+                    </div>
+                </div>
+                
                 <div class="menu-divider"></div>
-                <div class="menu-item" id="sidebar-theme-toggle">
-                    <i class="fas fa-adjust"></i>
-                    <span>切换主题</span>
+                
+                <!-- 全局设置 -->
+                <div class="sidebar-section">
+                    <h4>全局设置</h4>
+                    <div class="menu-item" data-page="api-config">
+                        <i class="fas fa-key"></i>
+                        <span>模型API</span>
+                    </div>
+                    <div class="menu-item" id="sidebar-theme-toggle">
+                        <i class="fas fa-adjust"></i>
+                        <span>切换主题</span>
+                    </div>
                 </div>
             </div>
 
@@ -357,382 +446,6 @@
                     </div>
                 </div>
 
-                <!-- Great Architect Page (大神架构) -->
-                <div class="page" id="page-architect">
-                    <div class="card full-height">
-                        <div class="card-header architecture-header">
-                            <h2><i class="fas fa-crown"></i> 大神架构 <small>引导式创作工作流</small></h2>
-                            <div class="wizard-steps">
-                                <div class="step active" data-step="1">1. 核心扩展</div>
-                                <div class="step" data-step="2">2. 深度构建</div>
-                                <div class="step" data-step="3">3. 切片撰写</div>
-                                <div class="step" data-step="4">4. 人性优化</div>
-                            </div>
-                        </div>
-                        <div class="card-body architecture-body">
-                            <!-- Stage 1: Creative Expansion -->
-                            <div class="architect-stage active" id="architect-stage-1">
-                                <div class="stage-intro">
-                                    <h3>第一阶段：核心创意扩展</h3>
-                                    <p>基于你的灵感，生成多个不同方向的故事架构，帮助你找到最佳创作方向。</p>
-                                </div>
-                                <div class="form-group">
-                                    <label>你的初步设定 / 灵感碎片</label>
-                                    <textarea id="architect-input-1" class="form-control" rows="5"
-                                        placeholder="例如：一个能听到物品说话的离婚律师...或：一个拥有预知死亡能力的医生..."></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>衍生风格偏好</label>
-                                    <div class="style-tags" id="architect-style-tags">
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="爽文">
-                                            <span class="tag-label"><i class="fas fa-fire"></i> 爽文</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="虐文">
-                                            <span class="tag-label"><i class="fas fa-sad-tear"></i> 虐文</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="反转">
-                                            <span class="tag-label"><i class="fas fa-retweet"></i> 高智商反转</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="脑洞">
-                                            <span class="tag-label"><i class="fas fa-brain"></i> 大脑洞</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="情感">
-                                            <span class="tag-label"><i class="fas fa-heart"></i> 情感细腻</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="战斗">
-                                            <span class="tag-label"><i class="fas fa-fist-raised"></i> 热血战斗</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="智斗">
-                                            <span class="tag-label"><i class="fas fa-chess"></i> 智斗权谋</span>
-                                        </label>
-                                        <label class="tag-card">
-                                            <input type="checkbox" name="architect-style" value="轻松">
-                                            <span class="tag-label"><i class="fas fa-laugh"></i> 轻松搞笑</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group col-6">
-                                        <label>衍生数量</label>
-                                        <select id="architect-idea-count" class="form-control">
-                                            <option value="3">3 个方向</option>
-                                            <option value="5" selected>5 个方向</option>
-                                            <option value="8">8 个方向</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group col-6">
-                                        <label>细节程度</label>
-                                        <select id="architect-detail-level" class="form-control">
-                                            <option value="basic">基础 (标题+简介)</option>
-                                            <option value="detail" selected>详细 (标题+简介+标签)</option>
-                                            <option value="comprehensive">全面 (标题+简介+标签+亮点)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-actions">
-                                    <button class="btn btn-primary btn-block" id="btn-architect-expand">
-                                        <i class="fas fa-wand-sparkles"></i> 开始衍生故事脉络
-                                    </button>
-                                    <button class="btn btn-secondary btn-block" id="btn-architect-preset">
-                                        <i class="fas fa-list"></i> 使用预设模板
-                                    </button>
-                                </div>
-                                <div id="architect-results-1" class="architect-results-stack mt-20">
-                                    <!-- AI results will appear here -->
-                                </div>
-                                <div class="alert alert-info" style="margin-top: 20px;">
-                                    <i class="fas fa-lightbulb"></i> 提示：AI会根据你的选择生成不同风格的故事方向，选择最有感觉的一个进行深入创作。
-                                </div>
-                            </div>
-
-                            <!-- Stage 2: Character & Pacing -->
-                            <div class="architect-stage" id="architect-stage-2">
-                                <div class="stage-intro">
-                                    <h3>第二阶段：角色构建与情绪节奏规划</h3>
-                                    <p>基于选定的方向，进行反派推演、主角建档及章节提纲规划。</p>
-                                </div>
-                                <div class="form-group">
-                                    <label>已选定故事标题</label>
-                                    <input type="text" id="architect-selected-title" class="form-control" readonly>
-                                </div>
-                                <div class="tabs">
-                                    <button class="tab-btn active" data-tab="tab-build-characters">角色设定</button>
-                                    <button class="tab-btn" data-tab="tab-build-outline">章节大纲</button>
-                                    <button class="tab-btn" data-tab="tab-build-world">世界观设定</button>
-                                </div>
-                                <div class="tab-content active" id="tab-build-characters">
-                                    <div class="form-row">
-                                        <div class="form-group col-50">
-                                            <label>
-                                                <input type="checkbox" id="build-main-character" checked>
-                                                主角设定
-                                            </label>
-                                            <small class="text-muted">详细设定主角的性格、背景、成长路线</small>
-                                        </div>
-                                        <div class="form-group col-50">
-                                            <label>
-                                                <input type="checkbox" id="build-villain" checked>
-                                                反派推演
-                                            </label>
-                                            <small class="text-muted">分析反派的动机、能力、弱点</small>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-50">
-                                            <label>
-                                                <input type="checkbox" id="build-secondary" checked>
-                                                配角设定
-                                            </label>
-                                            <small class="text-muted">设定主要配角和关系网络</small>
-                                        </div>
-                                        <div class="form-group col-50">
-                                            <label>
-                                                <input type="checkbox" id="build-relationships" checked>
-                                                关系网络
-                                            </label>
-                                            <small class="text-muted">分析角色之间的复杂关系</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="tab-build-outline">
-                                    <div class="form-row">
-                                        <div class="form-group col-50">
-                                            <label>大纲类型</label>
-                                            <select id="outline-type" class="form-control">
-                                                <option value="emotion">情绪节奏大纲</option>
-                                                <option value="plot">剧情发展大纲</option>
-                                                <option value="both" selected>综合大纲</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group col-50">
-                                            <label>大纲章节数</label>
-                                            <select id="outline-chapters" class="form-control">
-                                                <option value="10">10 章</option>
-                                                <option value="20">20 章</option>
-                                                <option value="30" selected>30 章</option>
-                                                <option value="50">50 章</option>
-                                                <option value="100">100 章</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>关键节点要求</label>
-                                        <div class="check-list">
-                                            <label><input type="checkbox" id="outline-key-points" checked> 标注关键爽点/虐点</label>
-                                            <label><input type="checkbox" id="outline-cliffhangers" checked> 设计章节结尾钩子</label>
-                                            <label><input type="checkbox" id="outline-character-growth" checked> 规划角色成长曲线</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="tab-build-world">
-                                    <div class="form-group">
-                                        <label>世界观深度</label>
-                                        <select id="world-depth" class="form-control">
-                                            <option value="light">轻度设定</option>
-                                            <option value="medium" selected>中度设定</option>
-                                            <option value="deep">深度设定</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>需要设定的元素</label>
-                                        <div class="check-list">
-                                            <label><input type="checkbox" id="world-system" checked> 力量系统</label>
-                                            <label><input type="checkbox" id="world-history" checked> 历史背景</label>
-                                            <label><input type="checkbox" id="world-powers" checked> 势力分布</label>
-                                            <label><input type="checkbox" id="world-rules" checked> 世界规则</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-actions mt-10">
-                                    <button class="btn btn-primary" id="btn-architect-build">
-                                        <i class="fas fa-vial"></i> 启动深度构建
-                                    </button>
-                                    <button class="btn btn-secondary" id="btn-architect-save-outline">
-                                        <i class="fas fa-save"></i> 保存设定
-                                    </button>
-                                </div>
-                                <div id="architect-results-2" class="architect-results-scroll mt-20">
-                                    <!-- AI results will appear here -->
-                                </div>
-                            </div>
-
-                            <!-- Stage 3: Scene Slicing -->
-                            <div class="architect-stage" id="architect-stage-3">
-                                <div class="stage-intro">
-                                    <h3>第三阶段：场景切片化撰写</h3>
-                                    <p>遵循“300字法则”与“冰山理论”，像拍电影一样写小说。</p>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group col-4">
-                                        <label>选择章节</label>
-                                        <select id="architect-chapter-select" class="form-control"></select>
-                                    </div>
-                                    <div class="form-group col-8">
-                                        <label>目标情绪强度</label>
-                                        <div class="range-with-value">
-                                            <input type="range" id="architect-intensity" min="1" max="10" value="7">
-                                            <span id="intentsity-value">7</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group col-6">
-                                        <label>写作模式</label>
-                                        <select id="architect-write-mode" class="form-control">
-                                            <option value="normal">正常撰写</option>
-                                            <option value="outline">基于大纲撰写</option>
-                                            <option value="scene">分镜模式</option>
-                                            <option value="dialogue">对话驱动</option>
-                                            <option value="description">描写强化</option>
-                                            <option value="thinking">内心独白</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group col-6">
-                                        <label>AI辅助强度</label>
-                                        <select id="architect-ai-level" class="form-control">
-                                            <option value="light">轻度辅助</option>
-                                            <option value="medium" selected>中度辅助</option>
-                                            <option value="strong">重度辅助</option>
-                                            <option value="full">全权委托</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="scene-editor-container">
-                                    <textarea id="architect-editor" class="form-control"
-                                        placeholder="开始创作...（每300字会自动提醒预埋反转）"></textarea>
-                                    <div class="editor-stats">
-                                        <span>当前字数: <b id="architect-word-count">0</b></span>
-                                        <span id="pacing-helper" class="text-info">建议在 300 字附近增加一个反转点</span>
-                                        <span id="scene-counter">场景 0 / 0</span>
-                                    </div>
-                                    <div class="scene-controls">
-                                        <button class="btn btn-sm btn-secondary" id="btn-scene-next">
-                                            <i class="fas fa-forward"></i> 下一场景
-                                        </button>
-                                        <button class="btn btn-sm btn-secondary" id="btn-scene-prev">
-                                            <i class="fas fa-backward"></i> 上一场景
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="form-actions mt-10">
-                                    <button class="btn btn-secondary" id="btn-architect-save-draft">
-                                        <i class="fas fa-save"></i> 保存草稿
-                                    </button>
-                                    <button class="btn btn-primary" id="btn-architect-write">
-                                        <i class="fas fa-feather-pointed"></i> AI 辅助撰写/续写
-                                    </button>
-                                    <button class="btn btn-primary" id="btn-architect-outline-write">
-                                        <i class="fas fa-sync"></i> 基于大纲撰写
-                                    </button>
-                                    <button class="btn btn-secondary" id="btn-architect-import">
-                                        <i class="fas fa-folder-open"></i> 导入章节
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Stage 4: Optimization -->
-                            <div class="architect-stage" id="architect-stage-4">
-                                <div class="stage-intro">
-                                    <h3>第四阶段：内容检查与人性化润色</h3>
-                                    <p>剔除AI感，增加生活闲笔，调整叙事呼吸感。</p>
-                                </div>
-                                <div class="tabs">
-                                    <button class="tab-btn active" data-tab="tab-optimize-style">文风优化</button>
-                                    <button class="tab-btn" data-tab="tab-optimize-structure">结构调整</button>
-                                    <button class="tab-btn" data-tab="tab-optimize-content">内容检查</button>
-                                </div>
-                                <div class="tab-content active" id="tab-optimize-style">
-                                    <div class="form-group">
-                                        <label>优化目标</label>
-                                        <div class="check-list">
-                                            <label><input type="checkbox" id="optimize-remove-ai" checked> 剔除AI感</label>
-                                            <label><input type="checkbox" id="optimize-add-details" checked> 增加细节描写</label>
-                                            <label><input type="checkbox" id="optimize-vary-sentences" checked> 调整句式节奏</label>
-                                            <label><input type="checkbox" id="optimize-environment" checked> 增加环境闲笔</label>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>文风偏好</label>
-                                        <select id="optimize-style" class="form-control">
-                                            <option value="realistic">写实风格</option>
-                                            <option value="literary">文学气质</option>
-                                            <option value="cinematic">电影感</option>
-                                            <option value="modern">现代简洁</option>
-                                            <option value="classic">经典厚重</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="tab-optimize-structure">
-                                    <div class="form-group">
-                                        <label>结构优化</label>
-                                        <div class="check-list">
-                                            <label><input type="checkbox" id="structure-reorder" checked> 重新组织段落</label>
-                                            <label><input type="checkbox" id="structure-add-hooks" checked> 增加钩子</label>
-                                            <label><input type="checkbox" id="structure-shorten" checked> 删减冗余</label>
-                                            <label><input type="checkbox" id="structure-add-transitions" checked> 增加过渡句</label>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>节奏调整</label>
-                                        <div class="range-with-value">
-                                            <input type="range" id="structure-pacing" min="1" max="10" value="5">
-                                            <span>当前值: 5 (1=慢节奏, 10=快节奏)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-content" id="tab-optimize-content">
-                                    <div class="form-group">
-                                        <label>内容检查</label>
-                                        <div class="check-list">
-                                            <label><input type="checkbox" id="content-check-dialog" checked> 对话真实性</label>
-                                            <label><input type="checkbox" id="content-check-character" checked> 人设一致性</label>
-                                            <label><input type="checkbox" id="content-check-plausibility" checked> 情节合理性</label>
-                                            <label><input type="checkbox" id="content-check-details" checked> 细节准确性</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="split-view architect-optimization-view">
-                                    <div class="view-panel">
-                                        <label>原文内容</label>
-                                        <div id="architect-original-text" class="content-preview"></div>
-                                    </div>
-                                    <div class="view-panel">
-                                        <label>优化后内容</label>
-                                        <div id="architect-optimized-text" class="content-preview"></div>
-                                    </div>
-                                </div>
-                                <div class="form-actions mt-10">
-                                    <button class="btn btn-primary" id="btn-architect-optimize">
-                                        <i class="fas fa-sparkles"></i> 启动人性化润色
-                                    </button>
-                                    <button class="btn btn-secondary" id="btn-architect-preview">
-                                        <i class="fas fa-eye"></i> 预览对比
-                                    </button>
-                                </div>
-                                <div class="form-actions mt-10">
-                                    <button class="btn btn-success" id="btn-architect-finalize">
-                                        <i class="fas fa-check-circle"></i> 确认并导入正式库
-                                    </button>
-                                    <button class="btn btn-primary" id="btn-architect-export">
-                                        <i class="fas fa-download"></i> 导出为TXT
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer architecture-footer">
-                            <button class="btn btn-link" id="btn-architect-prev" disabled>上一步</button>
-                            <button class="btn btn-link" id="btn-architect-next" disabled>下一步</button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Settings Page -->
                 <div class="page" id="page-settings">
                     <div class="card full-height">
@@ -846,7 +559,7 @@
                                     <div class="form-group col-auto mr-auto">
                                         <label>生成章节数</label>
                                         <input type="number" id="outline-count" class="form-control" value="5" min="1"
-                                            max="10" style="width: 80px">
+                                            max="100" style="width: 80px">
                                     </div>
                                     <div class="form-group col-auto align-self-end">
                                         <button class="btn btn-primary" id="btn-generate-outline">
@@ -981,6 +694,1389 @@
                     </div>
                 </div>
 
+                <!-- 中长网文（卷管理）相关页面 -->
+                <!-- 卷管理首页 -->
+                <div class="page" id="page-volume-home">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-book"></i> 中长网文 - 卷管理</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-primary" id="btn-create-volume">
+                                    <i class="fas fa-plus"></i> 创建新卷
+                                </button>
+                                <button class="btn btn-secondary" id="btn-refresh-volumes">
+                                    <i class="fas fa-sync"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="novel-selector-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-folder"></i>
+                                        <span>当前小说</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label>小说名称</label>
+                                        <div class="form-row">
+                                            <input type="text" id="volume-novel-name" class="form-control"
+                                                placeholder="输入小说名称">
+                                            <button class="btn btn-primary" id="btn-create-novel">
+                                                <i class="fas fa-plus"></i> 创建
+                                            </button>
+                                            <button class="btn btn-secondary" id="btn-save-novel-name">
+                                                <i class="fas fa-save"></i> 保存
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>已有小说</label>
+                                        <select id="volume-novel-select" class="form-control">
+                                            <option value="">选择已有小说</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="feature-grid">
+                                <div class="feature-item" onclick="app.navigateTo('volume-create')">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <h3>创建卷</h3>
+                                    <p>创建新的卷，设置卷标题、概述和章节范围</p>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('volume-list')">
+                                    <i class="fas fa-list"></i>
+                                    <h3>卷列表</h3>
+                                    <p>管理所有卷，查看卷状态和详细信息</p>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('volume-outline')">
+                                    <i class="fas fa-map"></i>
+                                    <h3>卷大纲</h3>
+                                    <p>为卷生成详细的章节大纲</p>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('volume-write')">
+                                    <i class="fas fa-feather"></i>
+                                    <h3>卷章节编辑</h3>
+                                    <p>手动编辑和生成卷的章节内容</p>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('volume-generate')">
+                                    <i class="fas fa-magic"></i>
+                                    <h3>卷生成</h3>
+                                    <p>基于卷大纲批量生成章节内容</p>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('volume-content')">
+                                    <i class="fas fa-book-open"></i>
+                                    <h3>卷内容</h3>
+                                    <p>查看已生成的章节内容</p>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('volume-characters')">
+                                    <i class="fas fa-users"></i>
+                                    <h3>卷人物关系</h3>
+                                    <p>管理卷中的人物关系网络</p>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <span>卷管理统计</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="stats-grid">
+                                        <div class="stat-item">
+                                            <span class="stat-label">总卷数</span>
+                                            <span class="stat-value" id="total-volumes">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">总章节</span>
+                                            <span class="stat-value" id="total-chapters">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">总字数</span>
+                                            <span class="stat-value" id="total-words">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">完成率</span>
+                                            <span class="stat-value" id="completion-rate">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 创建卷页面 -->
+                <div class="page" id="page-volume-create">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-plus"></i> 创建卷</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="volume-create-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-edit"></i>
+                                        <span>基本信息</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label>卷标题</label>
+                                        <input type="text" id="volume-title" class="form-control"
+                                            placeholder="输入卷标题（例如：第一卷 觉醒）">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>卷概述</label>
+                                        <textarea id="volume-summary" class="form-control" rows="3"
+                                            placeholder="输入卷概述（例如：主角获得上古传承，开始修行之路）"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="volume-create-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-cog"></i>
+                                        <span>章节设置</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label>章节数量</label>
+                                        <input type="number" id="volume-chapter-count" class="form-control"
+                                            value="30" min="1" max="100">
+                                        <small class="text-muted">建议一卷30章左右，约10万字</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>每章字数范围</label>
+                                        <div class="form-row">
+                                            <div class="form-group col-50">
+                                                <input type="number" id="volume-min-words" class="form-control"
+                                                    value="2000" min="500" max="10000" placeholder="最小字数">
+                                            </div>
+                                            <div class="form-group col-50">
+                                                <input type="number" id="volume-max-words" class="form-control"
+                                                    value="4000" min="500" max="20000" placeholder="最大字数">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">设置每章的字数范围，AI生成时会严格控制在范围内</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>开始章节</label>
+                                        <input type="number" id="volume-start-chapter" class="form-control"
+                                            value="1" min="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="volume-mode-selector"></div>
+                            <div class="form-actions-fixed">
+                                <button class="btn btn-primary btn-large" id="btn-save-volume">
+                                    <i class="fas fa-save"></i> 保存卷
+                                </button>
+                                <button class="btn btn-secondary btn-large" id="btn-cancel-volume">
+                                    <i class="fas fa-times"></i> 取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷级别设定页面 -->
+                <div class="page" id="page-volume-settings">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-cogs"></i> 卷级别设定</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" id="btn-back-to-volume-list">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- 卷选择区域 -->
+                            <div class="volume-selector-card">
+                                <div class="selector-header">
+                                    <i class="fas fa-book"></i>
+                                    <span>选择要设定的卷</span>
+                                </div>
+                                <select id="volume-settings-select" class="form-control volume-select">
+                                    <option value="">请选择一个卷</option>
+                                </select>
+                                <div class="import-section">
+                                    <button class="btn btn-import" id="btn-use-template">
+                                        <i class="fas fa-magic"></i>
+                                        使用内置模板
+                                    </button>
+                                    <span class="import-hint">点击使用内置的卷级别设定模板</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 设定进度指示器 -->
+                            <div class="settings-progress">
+                                <div class="progress-item" data-section="world">
+                                    <div class="progress-icon">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <div class="progress-label">世界观</div>
+                                    <div class="progress-status"></div>
+                                </div>
+                                <div class="progress-item" data-section="characters">
+                                    <div class="progress-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="progress-label">人物</div>
+                                    <div class="progress-status"></div>
+                                </div>
+                                <div class="progress-item" data-section="plot">
+                                    <div class="progress-icon">
+                                        <i class="fas fa-theater-masks"></i>
+                                    </div>
+                                    <div class="progress-label">剧情</div>
+                                    <div class="progress-status"></div>
+                                </div>
+                                <div class="progress-item" data-section="state">
+                                    <div class="progress-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="progress-label">状态</div>
+                                    <div class="progress-status"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 设定卡片 -->
+                            <div class="settings-cards-container">
+                                <!-- 世界观设定卡片 -->
+                                <div class="settings-card world-card" data-section="world">
+                                    <div class="card-header-custom">
+                                        <div class="card-title">
+                                            <i class="fas fa-globe"></i>
+                                            <span>世界观设定</span>
+                                        </div>
+                                        <div class="card-toggle">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-body-custom">
+                                        <div class="setting-tip">
+                                            <i class="fas fa-lightbulb"></i>
+                                            <span>设定本卷的世界观背景和特殊规则，让AI生成更符合本卷特色的内容</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-mountain"></i>
+                                                本卷世界观背景
+                                                <span class="label-hint">描述本卷特有的环境、地点、势力分布等</span>
+                                            </label>
+                                            <textarea id="volume-world-setting" class="form-control" rows="4"
+                                                placeholder="例如：本卷进入仙界，描述仙界的规则、势力分布等&#10;- 仙界分为上中下三界&#10;- 上界由三大宗门统治&#10;- 灵气浓度是凡间的100倍"></textarea>
+                                            <div class="char-count">0 / 500</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-scroll"></i>
+                                                本卷特殊规则
+                                                <span class="label-hint">本卷独有的规则设定，影响修炼、战斗等</span>
+                                            </label>
+                                            <textarea id="volume-special-rules" class="form-control" rows="3"
+                                                placeholder="例如：本卷中灵气浓度是凡间的10倍，修炼速度加快&#10;- 禁止使用飞行法术&#10;- 每日只能使用一次灵力"></textarea>
+                                            <div class="char-count">0 / 300</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 人物设定卡片 -->
+                                <div class="settings-card characters-card" data-section="characters">
+                                    <div class="card-header-custom">
+                                        <div class="card-title">
+                                            <i class="fas fa-users"></i>
+                                            <span>人物设定</span>
+                                        </div>
+                                        <div class="card-toggle">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-body-custom">
+                                        <div class="setting-tip">
+                                            <i class="fas fa-lightbulb"></i>
+                                            <span>设定本卷出现的主要角色和角色关系的变化</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-user-plus"></i>
+                                                本卷主要角色
+                                                <span class="label-hint">新出现的角色或重要角色的变化</span>
+                                            </label>
+                                            <textarea id="volume-main-characters" class="form-control" rows="5"
+                                                placeholder="例如：&#10;张三：本卷新出现的反派，魔道宗门长老，性格阴险狡诈，擅长毒术&#10;李四：主角的师兄，本卷中突破到金丹期，实力大增&#10;王五：仙界公主，对主角有好感"></textarea>
+                                            <div class="char-count">0 / 800</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-project-diagram"></i>
+                                                本卷角色关系变化
+                                                <span class="label-hint">角色之间关系的变化和发展</span>
+                                            </label>
+                                            <textarea id="volume-character-relations" class="form-control" rows="4"
+                                                placeholder="例如：&#10;主角与王五从朋友变成恋人&#10;主角与反派宗门的矛盾激化&#10;配角A背叛主角，成为新的敌人"></textarea>
+                                            <div class="char-count">0 / 500</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 剧情设定卡片 -->
+                                <div class="settings-card plot-card" data-section="plot">
+                                    <div class="card-header-custom">
+                                        <div class="card-title">
+                                            <i class="fas fa-theater-masks"></i>
+                                            <span>剧情设定</span>
+                                        </div>
+                                        <div class="card-toggle">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-body-custom">
+                                        <div class="setting-tip">
+                                            <i class="fas fa-lightbulb"></i>
+                                            <span>设定本卷的主线剧情、支线剧情和核心冲突</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-road"></i>
+                                                本卷主线剧情
+                                                <span class="label-hint">本卷的主要故事线和发展方向</span>
+                                            </label>
+                                            <textarea id="volume-main-plot" class="form-control" rows="4"
+                                                placeholder="例如：主角进入仙界，参加宗门考核，最终成为内门弟子&#10;- 初入仙界，适应环境&#10;- 参加考核，展现实力&#10;- 通过考核，成为内门弟子"></textarea>
+                                            <div class="char-count">0 / 500</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-code-branch"></i>
+                                                本卷支线剧情
+                                                <span class="label-hint">本卷的次要故事线和副线剧情</span>
+                                            </label>
+                                            <textarea id="volume-sub-plots" class="form-control" rows="4"
+                                                placeholder="例如：&#10;主角在考核过程中结识新朋友&#10;发现宗门内部的阴谋&#10;获得神秘传承"></textarea>
+                                            <div class="char-count">0 / 500</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-bolt"></i>
+                                                本卷核心冲突
+                                                <span class="label-hint">本卷的主要矛盾和冲突点</span>
+                                            </label>
+                                            <textarea id="volume-core-conflict" class="form-control" rows="3"
+                                                placeholder="例如：&#10;主角与反派宗门的冲突，争夺修炼资源&#10;宗门内部的权力斗争&#10;主角与竞争对手的对抗"></textarea>
+                                            <div class="char-count">0 / 300</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 角色状态卡片 -->
+                                <div class="settings-card state-card" data-section="state">
+                                    <div class="card-header-custom">
+                                        <div class="card-title">
+                                            <i class="fas fa-chart-line"></i>
+                                            <span>角色状态</span>
+                                        </div>
+                                        <div class="card-toggle">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-body-custom">
+                                        <div class="setting-tip">
+                                            <i class="fas fa-lightbulb"></i>
+                                            <span>设定本卷中角色状态的变化，如等级、能力、装备等</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="fas fa-level-up-alt"></i>
+                                                本卷角色状态变化
+                                                <span class="label-hint">角色在本卷开始和结束时的状态变化</span>
+                                            </label>
+                                            <textarea id="volume-character-state" class="form-control" rows="4"
+                                                placeholder="例如：&#10;主角：从筑基期突破到金丹期，获得新的功法&#10;配角A：重伤恢复，实力恢复到巅峰&#10;配角B：获得神器，实力大幅提升"></textarea>
+                                            <div class="char-count">0 / 500</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 操作按钮 -->
+                            <div class="form-actions-fixed">
+                                <button class="btn btn-primary btn-large" id="btn-save-volume-settings">
+                                    <i class="fas fa-save"></i>
+                                    保存卷设定
+                                </button>
+                                <button class="btn btn-secondary btn-large" id="btn-cancel-volume-settings">
+                                    <i class="fas fa-times"></i>
+                                    取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷列表页面 -->
+                <div class="page" id="page-volume-list">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-list"></i> 卷列表</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="search-card">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="volume-search" class="form-control"
+                                        placeholder="搜索卷...">
+                                </div>
+                            </div>
+                            <div id="volume-list-container" class="volume-list">
+                                <!-- Volume items will appear here -->
+                                <div class="empty-state">暂无卷，请点击创建新卷</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷大纲页面 -->
+                <div class="page" id="page-volume-outline">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-map"></i> 卷大纲</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="volume-outline-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-cog"></i>
+                                        <span>大纲设置</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label>选择卷</label>
+                                        <select id="volume-select" class="form-control">
+                                            <option value="">请选择一个卷</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>卷核心创意</label>
+                                        <textarea id="volume-core-idea" class="form-control" rows="3"
+                                            placeholder="输入本卷的核心创意、爽点或卖点..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>大纲生成设置</label>
+                                        <div class="form-row">
+                                            <div class="form-group col-50">
+                                                <label>生成章节数</label>
+                                                <input type="number" id="volume-outline-count" class="form-control"
+                                                    value="30" min="1" max="100">
+                                            </div>
+                                            <div class="form-group col-50">
+                                                <label>大纲详细程度</label>
+                                                <select id="volume-outline-detail" class="form-control">
+                                                    <option value="basic">基础</option>
+                                                    <option value="medium" selected>中等</option>
+                                                    <option value="detailed">详细</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button class="btn btn-primary" id="btn-generate-volume-outline">
+                                            <i class="fas fa-magic"></i> 生成卷大纲
+                                        </button>
+                                        <button class="btn btn-secondary" id="btn-view-existing-outline" style="display: none;">
+                                            <i class="fas fa-eye"></i> 查看现有大纲
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="volume-outline-result" class="volume-result-card" style="display: none;">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>生成结果</span>
+                                    </div>
+                                    <div class="result-actions">
+                                        <button class="btn btn-sm btn-secondary" id="btn-edit-outline">
+                                            <i class="fas fa-edit"></i> 编辑
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" id="btn-export-outline">
+                                            <i class="fas fa-download"></i> 导出
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" id="btn-delete-outline">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="result-content"></div>
+                                </div>
+                            </div>
+
+                            <div id="volume-outline-editor" class="volume-editor-card" style="display: none;">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-edit"></i>
+                                        <span>编辑大纲</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <textarea id="volume-outline-editor-text" class="form-control textarea-code" rows="20"></textarea>
+                                    <div class="form-actions mt-10">
+                                        <button class="btn btn-primary" id="btn-save-outline-edit">
+                                            <i class="fas fa-save"></i> 保存修改
+                                        </button>
+                                        <button class="btn btn-secondary" id="btn-cancel-outline-edit">
+                                            <i class="fas fa-times"></i> 取消
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷生成页面 -->
+                <div class="page" id="page-volume-generate">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-magic"></i> 卷生成</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="volume-generate-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-cog"></i>
+                                        <span>生成设置</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label>选择卷</label>
+                                        <select id="volume-select-generate" class="form-control">
+                                            <option value="">请选择一个卷</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>生成设置</label>
+                                        <div class="form-row">
+                                            <div class="form-group col-50">
+                                                <label>生成模式</label>
+                                                <select id="volume-generate-mode" class="form-control">
+                                                    <option value="outline">基于大纲生成</option>
+                                                    <option value="auto">自动生成</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-50">
+                                                <label>生成速度</label>
+                                                <select id="volume-generate-speed" class="form-control">
+                                                    <option value="normal">正常</option>
+                                                    <option value="fast">快速</option>
+                                                    <option value="detailed">详细</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="volume-chapter-card">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-list-check"></i>
+                                        <span>章节选择</span>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="chapter-selection">
+                                        <div class="chapter-selection-header">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" id="select-all-chapters" checked>
+                                                <span>全选</span>
+                                            </label>
+                                            <div class="chapter-search-box">
+                                                <input type="text" id="chapter-search-input" class="form-control" placeholder="搜索章节...">
+                                                <i class="fas fa-search"></i>
+                                            </div>
+                                        </div>
+                                        <div class="chapter-filters">
+                                            <button class="filter-btn active" data-filter="all">全部</button>
+                                            <button class="filter-btn" data-filter="pending">待生成</button>
+                                            <button class="filter-btn" data-filter="completed">已完成</button>
+                                            <button class="filter-btn" data-filter="generating">生成中</button>
+                                        </div>
+                                        <div id="chapter-selection-list" class="chapter-selection-list">
+                                        </div>
+                                        <div class="chapter-selection-footer">
+                                            <span class="selection-info">已选择 <strong id="selected-count">0</strong> / <span id="total-count">0</span> 个章节</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions-fixed">
+                                <button class="btn btn-primary btn-large" id="btn-generate-volume-content">
+                                    <i class="fas fa-magic"></i> 生成选中的章节
+                                </button>
+                                <button class="btn btn-secondary btn-large" id="btn-regenerate-volume-content" style="display: none;">
+                                    <i class="fas fa-redo"></i> 重新生成
+                                </button>
+                            </div>
+
+                            <div id="volume-generate-progress" class="mt-10" style="display: none;">
+                                <div class="progress-container">
+                                    <div class="progress-header">
+                                        <h4>生成进度</h4>
+                                        <span id="generate-progress-percent">0%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="generate-progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="progress-text">
+                                        <span id="generate-progress-text">准备中...</span>
+                                    </div>
+                                    <div class="progress-details" id="generate-progress-details"></div>
+                                    <div class="progress-chapters" id="progress-chapters-list"></div>
+                                </div>
+                            </div>
+
+                            <div id="volume-generate-result" class="volume-result-card" style="display: none;">
+                                <div class="card-header-custom">
+                                    <div class="card-title">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>生成结果</span>
+                                    </div>
+                                    <div class="result-actions">
+                                        <button class="btn btn-sm btn-secondary" id="btn-view-chapters">
+                                            <i class="fas fa-list"></i> 查看章节
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" id="btn-export-chapters">
+                                            <i class="fas fa-download"></i> 导出章节
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="result-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷内容页面 -->
+                <div class="page" id="page-volume-content">
+                    <div class="split-view">
+                        <div class="split-sidebar">
+                            <div class="panel-header">
+                                <h3>章节列表</h3>
+                                <button class="btn btn-sm btn-icon" id="btn-refresh-volume-content"><i class="fas fa-sync"></i></button>
+                            </div>
+                            <div class="search-container p-10">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="volume-content-search" class="form-control form-control-sm" placeholder="搜索章节...">
+                                </div>
+                            </div>
+                            <div class="chapter-list" id="volume-content-list">
+                            </div>
+                        </div>
+                        <div class="split-content">
+                            <div class="card full-height">
+                                <div class="card-header">
+                                    <h2><i class="fas fa-book-open"></i> 卷内容</h2>
+                                    <div class="header-actions">
+                                        <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                            <i class="fas fa-arrow-left"></i> 返回
+                                        </button>
+                                        <button class="btn btn-secondary" id="btn-export-volume-content">
+                                            <i class="fas fa-download"></i> 导出
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="content-viewer" id="volume-content-viewer">
+                                    <div class="empty-state">
+                                        <i class="fas fa-book"></i>
+                                        <p>请选择一个章节查看内容</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷内容页面 -->
+                <div class="page" id="page-volume-content">
+                    <div class="split-view">
+                        <div class="split-sidebar">
+                            <div class="panel-header">
+                                <h3>章节列表</h3>
+                                <button class="btn btn-sm btn-icon" id="btn-refresh-volume-content"><i class="fas fa-sync"></i></button>
+                            </div>
+                            <div class="search-container p-10">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="volume-content-search" class="form-control form-control-sm" placeholder="搜索章节...">
+                                </div>
+                            </div>
+                            <div class="chapter-list" id="volume-content-list">
+                            </div>
+                        </div>
+                        <div class="split-content">
+                            <div class="card full-height">
+                                <div class="card-header">
+                                    <h2><i class="fas fa-book-open"></i> 卷内容</h2>
+                                    <div class="header-actions">
+                                        <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                            <i class="fas fa-arrow-left"></i> 返回
+                                        </button>
+                                        <button class="btn btn-secondary" id="btn-export-volume-content">
+                                            <i class="fas fa-download"></i> 导出
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="content-viewer" id="volume-content-viewer">
+                                    <div class="empty-state">
+                                        <i class="fas fa-book"></i>
+                                        <p>请选择一个章节查看内容</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卷人物关系页面 -->
+                <div class="page" id="page-volume-characters">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-users"></i> 卷人物关系</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('volume-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                                <button class="btn btn-primary" id="btn-add-character-relation">
+                                    <i class="fas fa-plus"></i> 添加关系
+                                </button>
+                                <button class="btn btn-primary" id="btn-ai-generate-relations">
+                                    <i class="fas fa-magic"></i> AI生成
+                                </button>
+                                <button class="btn btn-secondary" id="btn-export-character-relations">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>选择卷</label>
+                                <select id="volume-character-select" class="form-control">
+                                    <option value="">请选择一个卷</option>
+                                </select>
+                            </div>
+                            <div id="character-relations-container" class="mt-20">
+                                <div class="empty-state">
+                                    <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                                    <p style="color: var(--text-secondary);">暂无人物关系</p>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">请先选择一个卷并添加人物关系</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 人物关系管理模态框 -->
+                <div id="character-relation-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-users"></i> <span id="modal-title">添加人物关系</span></h3>
+                            <button class="btn-close" onclick="volumeGenerator.closeModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="character-relation-form">
+                                <input type="hidden" id="modal-volume-id">
+                                <input type="hidden" id="modal-relation-index" value="-1">
+                                <div class="form-group">
+                                    <label>第一个角色</label>
+                                    <input type="text" id="modal-character1" class="form-control" placeholder="输入角色名称">
+                                </div>
+                                <div class="form-group">
+                                    <label>关系类型</label>
+                                    <select id="modal-relation-type" class="form-control">
+                                        <option value="朋友">朋友</option>
+                                        <option value="敌人">敌人</option>
+                                        <option value="恋人">恋人</option>
+                                        <option value="师徒">师徒</option>
+                                        <option value="兄弟">兄弟</option>
+                                        <option value="姐妹">姐妹</option>
+                                        <option value="亲属">亲属</option>
+                                        <option value="同事">同事</option>
+                                        <option value="其他">其他</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>第二个角色</label>
+                                    <input type="text" id="modal-character2" class="form-control" placeholder="输入角色名称">
+                                </div>
+                                <div class="form-group">
+                                    <label>关系描述</label>
+                                    <textarea id="modal-relation-description" class="form-control" rows="3" placeholder="输入关系的详细描述"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="volumeGenerator.closeModal()">取消</button>
+                            <button class="btn btn-primary" onclick="volumeGenerator.saveCharacterRelation()">保存</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 大神架构相关页面 -->
+                <!-- 架构首页 -->
+                <div class="page" id="page-architect-home">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-crown"></i> 大神架构 - 引导式创作</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-primary" id="btn-architect-save-project">
+                                    <i class="fas fa-save"></i> 保存项目
+                                </button>
+                                <button class="btn btn-secondary" id="btn-architect-load-project">
+                                    <i class="fas fa-folder-open"></i> 加载项目
+                                </button>
+                                <button class="btn btn-danger" id="btn-architect-new-project">
+                                    <i class="fas fa-plus"></i> 新建项目
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="project-info-card" style="background-color: var(--bg-secondary); border-radius: 8px; padding: 20px; margin-bottom: 30px; border: 1px solid var(--border-color);">
+                                <div class="form-row">
+                                    <div class="form-group col-8">
+                                        <label style="font-weight: 500; margin-bottom: 8px;">项目名称</label>
+                                        <input type="text" id="architect-project-name" class="form-control" placeholder="输入你的项目名称，例如：《都市最强修真》">
+                                    </div>
+                                    <div class="form-group col-4">
+                                        <label style="font-weight: 500; margin-bottom: 8px;">创作状态</label>
+                                        <div class="status-indicator" style="background-color: var(--accent-color); color: white; padding: 8px 12px; border-radius: 4px; font-size: 14px;">
+                                            <i class="fas fa-edit"></i> 创作中
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="project-description" style="margin-top: 15px;">
+                                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">项目描述</label>
+                                    <textarea id="architect-project-description" class="form-control" rows="2" placeholder="简要描述你的项目，例如：一部都市修真题材的爽文，主角意外获得修真传承..."></textarea>
+                                </div>
+                            </div>
+                            <div class="feature-grid" style="margin-bottom: 30px;">
+                                <div class="feature-item" onclick="app.navigateTo('architect-expand')">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-wand-sparkles"></i>
+                                    </div>
+                                    <h3>创意扩展</h3>
+                                    <p>基于灵感碎片生成多个故事方向，找到最佳创作路径</p>
+                                    <div class="feature-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('architect-build')">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-cubes"></i>
+                                    </div>
+                                    <h3>深度构建</h3>
+                                    <p>角色设定、世界观构建和章节大纲，打造完整故事框架</p>
+                                    <div class="feature-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('architect-write')">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-feather"></i>
+                                    </div>
+                                    <h3>切片撰写</h3>
+                                    <p>场景切片化撰写，像拍电影一样写小说，提升画面感</p>
+                                    <div class="feature-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                                <div class="feature-item" onclick="app.navigateTo('architect-optimize')">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-sparkles"></i>
+                                    </div>
+                                    <h3>人性优化</h3>
+                                    <p>剔除AI感，增加生活闲笔，调整叙事呼吸感，提升作品质感</p>
+                                    <div class="feature-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-20" style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);">
+                                <div class="card-header" style="background: linear-gradient(135deg, var(--accent-color), #7c3aed); color: white; padding: 20px;">
+                                    <h3 style="margin: 0;">架构工作流</h3>
+                                    <p style="margin: 5px 0 0 0; opacity: 0.9;">专业的创作流程，助你写出精彩故事</p>
+                                </div>
+                                <div class="card-body" style="padding: 24px;">
+                                    <div class="workflow-steps">
+                                        <div class="workflow-step">
+                                            <div class="step-number">1</div>
+                                            <div class="step-content">
+                                                <h4>核心扩展</h4>
+                                                <p>基于灵感生成多个故事方向，选择最有潜力的创意</p>
+                                            </div>
+                                            <div class="step-arrow">
+                                                <i class="fas fa-arrow-down"></i>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">2</div>
+                                            <div class="step-content">
+                                                <h4>深度构建</h4>
+                                                <p>角色设定、世界观构建和章节大纲，搭建完整故事框架</p>
+                                            </div>
+                                            <div class="step-arrow">
+                                                <i class="fas fa-arrow-down"></i>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">3</div>
+                                            <div class="step-content">
+                                                <h4>切片撰写</h4>
+                                                <p>场景切片化撰写，像拍电影一样写小说，提升画面感</p>
+                                            </div>
+                                            <div class="step-arrow">
+                                                <i class="fas fa-arrow-down"></i>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">4</div>
+                                            <div class="step-content">
+                                                <h4>人性优化</h4>
+                                                <p>剔除AI感，增加生活闲笔，调整叙事呼吸感，提升作品质感</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 创意扩展页面 -->
+                <div class="page" id="page-architect-expand">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-wand-sparkles"></i> 创意扩展</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('architect-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>你的初步设定 / 灵感碎片</label>
+                                <textarea id="architect-input-1" class="form-control" rows="5"
+                                    placeholder="例如：一个能听到物品说话的离婚律师...或：一个拥有预知死亡能力的医生..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>衍生风格偏好</label>
+                                <div class="style-tags" id="architect-style-tags">
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="爽文">
+                                        <span class="tag-label"><i class="fas fa-fire"></i> 爽文</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="虐文">
+                                        <span class="tag-label"><i class="fas fa-sad-tear"></i> 虐文</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="反转">
+                                        <span class="tag-label"><i class="fas fa-retweet"></i> 高智商反转</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="脑洞">
+                                        <span class="tag-label"><i class="fas fa-brain"></i> 大脑洞</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="情感">
+                                        <span class="tag-label"><i class="fas fa-heart"></i> 情感细腻</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="战斗">
+                                        <span class="tag-label"><i class="fas fa-fist-raised"></i> 热血战斗</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="智斗">
+                                        <span class="tag-label"><i class="fas fa-chess"></i> 智斗权谋</span>
+                                    </label>
+                                    <label class="tag-card">
+                                        <input type="checkbox" name="architect-style" value="轻松">
+                                        <span class="tag-label"><i class="fas fa-laugh"></i> 轻松搞笑</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label>衍生数量</label>
+                                    <select id="architect-idea-count" class="form-control">
+                                        <option value="3">3 个方向</option>
+                                        <option value="5" selected>5 个方向</option>
+                                        <option value="8">8 个方向</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label>细节程度</label>
+                                    <select id="architect-detail-level" class="form-control">
+                                        <option value="basic">基础 (标题+简介)</option>
+                                        <option value="detail" selected>详细 (标题+简介+标签)</option>
+                                        <option value="comprehensive">全面 (标题+简介+标签+亮点)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-primary btn-block" id="btn-architect-expand">
+                                    <i class="fas fa-wand-sparkles"></i> 开始衍生故事脉络
+                                </button>
+                                <button class="btn btn-secondary btn-block" id="btn-architect-preset">
+                                    <i class="fas fa-list"></i> 使用预设模板
+                                </button>
+                            </div>
+                            <div id="architect-results-1" class="architect-results-stack mt-20">
+                                <!-- AI results will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 深度构建页面 -->
+                <div class="page" id="page-architect-build">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-cubes"></i> 深度构建</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('architect-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>已选定故事标题</label>
+                                <input type="text" id="architect-selected-title" class="form-control" readonly>
+                            </div>
+                            <div class="tabs">
+                                <button class="tab-btn active" data-tab="tab-build-characters">角色设定</button>
+                                <button class="tab-btn" data-tab="tab-build-outline">章节大纲</button>
+                                <button class="tab-btn" data-tab="tab-build-world">世界观设定</button>
+                            </div>
+                            <div class="tab-content active" id="tab-build-characters">
+                                <div class="form-row">
+                                    <div class="form-group col-50">
+                                        <label>
+                                            <input type="checkbox" id="build-main-character" checked>
+                                            主角设定
+                                        </label>
+                                        <small class="text-muted">详细设定主角的性格、背景、成长路线</small>
+                                    </div>
+                                    <div class="form-group col-50">
+                                        <label>
+                                            <input type="checkbox" id="build-villain" checked>
+                                            反派推演
+                                        </label>
+                                        <small class="text-muted">分析反派的动机、能力、弱点</small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-50">
+                                        <label>
+                                            <input type="checkbox" id="build-secondary" checked>
+                                            配角设定
+                                        </label>
+                                        <small class="text-muted">设定主要配角和关系网络</small>
+                                    </div>
+                                    <div class="form-group col-50">
+                                        <label>
+                                            <input type="checkbox" id="build-relationships" checked>
+                                            关系网络
+                                        </label>
+                                        <small class="text-muted">分析角色之间的复杂关系</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-content" id="tab-build-outline">
+                                <div class="form-row">
+                                    <div class="form-group col-50">
+                                        <label>大纲类型</label>
+                                        <select id="outline-type" class="form-control">
+                                            <option value="emotion">情绪节奏大纲</option>
+                                            <option value="plot">剧情发展大纲</option>
+                                            <option value="both" selected>综合大纲</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-50">
+                                        <label>大纲章节数</label>
+                                        <select id="outline-chapters" class="form-control">
+                                            <option value="10">10 章</option>
+                                            <option value="20">20 章</option>
+                                            <option value="30" selected>30 章</option>
+                                            <option value="50">50 章</option>
+                                            <option value="100">100 章</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>关键节点要求</label>
+                                    <div class="check-list">
+                                        <label><input type="checkbox" id="outline-key-points" checked> 标注关键爽点/虐点</label>
+                                        <label><input type="checkbox" id="outline-cliffhangers" checked> 设计章节结尾钩子</label>
+                                        <label><input type="checkbox" id="outline-character-growth" checked> 规划角色成长曲线</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-content" id="tab-build-world">
+                                <div class="form-group">
+                                    <label>世界观深度</label>
+                                    <select id="world-depth" class="form-control">
+                                        <option value="light">轻度设定</option>
+                                        <option value="medium" selected>中度设定</option>
+                                        <option value="deep">深度设定</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>需要设定的元素</label>
+                                    <div class="check-list">
+                                        <label><input type="checkbox" id="world-system" checked> 力量系统</label>
+                                        <label><input type="checkbox" id="world-history" checked> 历史背景</label>
+                                        <label><input type="checkbox" id="world-powers" checked> 势力分布</label>
+                                        <label><input type="checkbox" id="world-rules" checked> 世界规则</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions mt-10">
+                                <button class="btn btn-primary" id="btn-architect-build">
+                                    <i class="fas fa-vial"></i> 启动深度构建
+                                </button>
+                                <button class="btn btn-secondary" id="btn-architect-save-outline">
+                                    <i class="fas fa-save"></i> 保存设定
+                                </button>
+                            </div>
+                            <div id="architect-results-2" class="architect-results-scroll mt-20">
+                                <!-- AI results will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 切片撰写页面 -->
+                <div class="page" id="page-architect-write">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-feather"></i> 切片撰写</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('architect-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-4">
+                                    <label>选择章节</label>
+                                    <select id="architect-chapter-select" class="form-control"></select>
+                                </div>
+                                <div class="form-group col-8">
+                                    <label>目标情绪强度</label>
+                                    <div class="range-with-value">
+                                        <input type="range" id="architect-intensity" min="1" max="10" value="7">
+                                        <span id="intentsity-value">7</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label>写作模式</label>
+                                    <select id="architect-write-mode" class="form-control">
+                                        <option value="normal">正常撰写</option>
+                                        <option value="outline">基于大纲撰写</option>
+                                        <option value="scene">分镜模式</option>
+                                        <option value="dialogue">对话驱动</option>
+                                        <option value="description">描写强化</option>
+                                        <option value="thinking">内心独白</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label>AI辅助强度</label>
+                                    <select id="architect-ai-level" class="form-control">
+                                        <option value="light">轻度辅助</option>
+                                        <option value="medium" selected>中度辅助</option>
+                                        <option value="strong">重度辅助</option>
+                                        <option value="full">全权委托</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="scene-editor-container">
+                                <textarea id="architect-editor" class="form-control"
+                                    placeholder="开始创作...（每300字会自动提醒预埋反转）"></textarea>
+                                <div class="editor-stats">
+                                    <span>当前字数: <b id="architect-word-count">0</b></span>
+                                    <span id="pacing-helper" class="text-info">建议在 300 字附近增加一个反转点</span>
+                                    <span id="scene-counter">场景 0 / 0</span>
+                                </div>
+                                <div class="scene-controls">
+                                    <button class="btn btn-sm btn-secondary" id="btn-scene-next">
+                                        <i class="fas fa-forward"></i> 下一场景
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" id="btn-scene-prev">
+                                        <i class="fas fa-backward"></i> 上一场景
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-actions mt-10">
+                                <button class="btn btn-secondary" id="btn-architect-save-draft">
+                                    <i class="fas fa-save"></i> 保存草稿
+                                </button>
+                                <button class="btn btn-primary" id="btn-architect-write">
+                                    <i class="fas fa-feather-pointed"></i> AI 辅助撰写/续写
+                                </button>
+                                <button class="btn btn-primary" id="btn-architect-outline-write">
+                                    <i class="fas fa-sync"></i> 基于大纲撰写
+                                </button>
+                                <button class="btn btn-secondary" id="btn-architect-import">
+                                    <i class="fas fa-folder-open"></i> 导入章节
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 人性优化页面 -->
+                <div class="page" id="page-architect-optimize">
+                    <div class="card full-height">
+                        <div class="card-header">
+                            <h2><i class="fas fa-sparkles"></i> 人性优化</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" onclick="app.navigateTo('architect-home')">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="tabs">
+                                <button class="tab-btn active" data-tab="tab-optimize-style">文风优化</button>
+                                <button class="tab-btn" data-tab="tab-optimize-structure">结构调整</button>
+                                <button class="tab-btn" data-tab="tab-optimize-content">内容检查</button>
+                            </div>
+                            <div class="tab-content active" id="tab-optimize-style">
+                                <div class="form-group">
+                                    <label>优化目标</label>
+                                    <div class="check-list">
+                                        <label><input type="checkbox" id="optimize-remove-ai" checked> 剔除AI感</label>
+                                        <label><input type="checkbox" id="optimize-add-details" checked> 增加细节描写</label>
+                                        <label><input type="checkbox" id="optimize-vary-sentences" checked> 调整句式节奏</label>
+                                        <label><input type="checkbox" id="optimize-environment" checked> 增加环境闲笔</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>文风偏好</label>
+                                    <select id="optimize-style" class="form-control">
+                                        <option value="realistic">写实风格</option>
+                                        <option value="literary">文学气质</option>
+                                        <option value="cinematic">电影感</option>
+                                        <option value="modern">现代简洁</option>
+                                        <option value="classic">经典厚重</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tab-content" id="tab-optimize-structure">
+                                <div class="form-group">
+                                    <label>结构优化</label>
+                                    <div class="check-list">
+                                        <label><input type="checkbox" id="structure-reorder" checked> 重新组织段落</label>
+                                        <label><input type="checkbox" id="structure-add-hooks" checked> 增加钩子</label>
+                                        <label><input type="checkbox" id="structure-shorten" checked> 删减冗余</label>
+                                        <label><input type="checkbox" id="structure-add-transitions" checked> 增加过渡句</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>节奏调整</label>
+                                    <div class="range-with-value">
+                                        <input type="range" id="structure-pacing" min="1" max="10" value="5">
+                                        <span>当前值: 5 (1=慢节奏, 10=快节奏)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-content" id="tab-optimize-content">
+                                <div class="form-group">
+                                    <label>内容检查</label>
+                                    <div class="check-list">
+                                        <label><input type="checkbox" id="content-check-dialog" checked> 对话真实性</label>
+                                        <label><input type="checkbox" id="content-check-character" checked> 人设一致性</label>
+                                        <label><input type="checkbox" id="content-check-plausibility" checked> 情节合理性</label>
+                                        <label><input type="checkbox" id="content-check-details" checked> 细节准确性</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="split-view architect-optimization-view">
+                                <div class="view-panel">
+                                    <label>原文内容</label>
+                                    <div id="architect-original-text" class="content-preview"></div>
+                                </div>
+                                <div class="view-panel">
+                                    <label>优化后内容</label>
+                                    <div id="architect-optimized-text" class="content-preview"></div>
+                                </div>
+                            </div>
+                            <div class="form-actions mt-10">
+                                <button class="btn btn-primary" id="btn-architect-optimize">
+                                    <i class="fas fa-sparkles"></i> 启动人性化润色
+                                </button>
+                                <button class="btn btn-secondary" id="btn-architect-preview">
+                                    <i class="fas fa-eye"></i> 预览对比
+                                </button>
+                            </div>
+                            <div class="form-actions mt-10">
+                                <button class="btn btn-success" id="btn-architect-finalize">
+                                    <i class="fas fa-check-circle"></i> 确认并导入正式库
+                                </button>
+                                <button class="btn btn-primary" id="btn-architect-export">
+                                    <i class="fas fa-download"></i> 导出为TXT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- API Config Page -->
                 <div class="page" id="page-api-config">
                     <div class="card">
@@ -1290,30 +2386,6 @@
 
             </div>
         </div>
-
-        <!-- Mobile Bottom Navigation -->
-        <div class="mobile-nav">
-            <div class="mobile-nav-item active" data-page="home">
-                <i class="fas fa-home"></i>
-                <span>首页</span>
-            </div>
-            <div class="mobile-nav-item" data-page="prompt">
-                <i class="fas fa-pen-fancy"></i>
-                <span>题材</span>
-            </div>
-            <div class="mobile-nav-item" data-page="outline">
-                <i class="fas fa-list-alt"></i>
-                <span>大纲</span>
-            </div>
-            <div class="mobile-nav-item" data-page="generate">
-                <i class="fas fa-magic"></i>
-                <span>写作</span>
-            </div>
-            <div class="mobile-nav-item" data-page="api-config">
-                <i class="fas fa-key"></i>
-                <span>设置</span>
-            </div>
-        </div>
     </div>
 
     <!-- Project Selection Modal -->
@@ -1437,8 +2509,9 @@
     <script src="js/settings-manager.js"></script>
     <script src="js/outline-generator.js"></script>
     <script src="js/novel-generator.js"></script>
-    <script src="js/great-architect.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/volume-generator.js"></script>
+    <script src="js/great-architect.js"></script>
 </body>
 
 </html>
