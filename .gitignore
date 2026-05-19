@@ -1,59 +1,57 @@
-# 依赖文件夹（绝对不能上传）
-node_modules/
-
-# 构建输出文件夹（绝对不能上传）
+# Build
 build/
 dist/
 
-# 数据文件夹（包含测试数据和用户数据，不能上传）
-data/
-!data/.gitkeep
+# Dependencies
+node_modules/
 
-# 分割章节临时文件夹
-split_chapters/
-test-chapters/
+# IDE
+.vscode/
+.idea/
 
-# 日志文件
-*.log
-
-# 操作系统文件
+# OS
 .DS_Store
 Thumbs.db
 
-# IDE配置文件
-.vscode/
-.idea/
-*.swp
-*.swo
+# Logs
+*.log
+logs/
 
-# 环境变量文件
+# Environment
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-# 临时文件
+# Data folders (contain test data and user data)
+data/
+!data/.gitkeep
+
+# Temporary folders
+split_chapters/
+test-chapters/
 tmp/
 temp/
 *.tmp
 
-# 压缩文件
+# Archive files
 *.zip
 *.rar
 *.7z
 
-# 特定的测试文件
-temp-full.txt
-我在实教当图书馆NPC.txt
+# Cache
+.cache/
+.storage/
 
-# Trae IDE配置文件
-.trae/
+# IDE swap files
+*.swp
+*.swo
 
-# 本地配置文件（如果有的话）
+# Local config files
 config.local.json
 *.local.json
 
-# 缓存文件
-.cache/
-.storage/
+# Trae IDE config
+.trae/
+
+# Specific test files
+temp-full.txt
+我在实教当图书馆NPC.txt
